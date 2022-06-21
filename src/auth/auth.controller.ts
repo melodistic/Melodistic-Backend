@@ -11,14 +11,17 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiInternalServerErrorResponse,
   ApiOperation,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { AuthDto } from './dto/auth.dto';
 import { UserService } from 'src/user/user.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
-
+import { GoogleAuthDto } from './dto/google-auth.dto';
+import { User } from 'src/decorators/user.decorator';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
@@ -26,6 +29,14 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly userService: UserService,
   ) {}
+
+  @Post('google')
+  async googleAuth(@Body() authData: GoogleAuthDto): Promise<AuthResponseDto> {
+    const user = await this.authService.authWithGoogle(authData.token);
+    if (!user) throw new BadRequestException();
+    const token = await this.authService.generateToken(user);
+    return { token };
+  }
 
   @Post('signup')
   @ApiOperation({ summary: 'Signup new user' })
@@ -79,7 +90,9 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async getMeInfo(userId: string) {
+  @ApiUnauthorizedResponse({description: 'User is not logged in'})
+  @ApiInternalServerErrorResponse()
+  async getMeInfo(@User() userId: string) {
     return this.userService.findUserById(userId);
   }
 }
