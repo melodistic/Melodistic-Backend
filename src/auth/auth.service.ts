@@ -27,6 +27,18 @@ export class AuthService {
     }
   }
   async signin(authData: AuthDto): Promise<User | null> {
-    return null;
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: {
+          email: authData.email,
+        },
+      });
+      if (!user) return null;
+      const isValid = await bcrypt.compare(authData.password, user.password);
+      if (!isValid) return null;
+      return user;
+    } catch (error) {
+      return null;
+    }
   }
 }
