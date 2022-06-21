@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class AuthResponseDto {
+export class GoogleAuthDto {
     
     @ApiProperty()
     token: string
