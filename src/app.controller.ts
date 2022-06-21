@@ -1,12 +1,25 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { ApiOkResponse, ApiOperation, ApiProperty } from '@nestjs/swagger';
+
+class PingResponseDto {
+  @ApiProperty()
+  message: string
+
+  @ApiProperty()
+  timestamp: Date
+}
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor() {}
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @ApiOperation({ summary: 'healthcheck' })
+  @ApiOkResponse({ type: PingResponseDto})
+  getHello() {
+    return {
+      message: 'pong',
+      timestamp: new Date()
+    }
   }
 }
