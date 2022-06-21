@@ -7,20 +7,26 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-    constructor(private prisma: PrismaService) {}
-    
-    async hashPassword(password: string): Promise<string> {
-        return await bcrypt.hash(password, 10);
-    }
+  constructor(private prisma: PrismaService) {}
 
-    async signup(authData: AuthDto): Promise<User> {
-        const user =
-            this.prisma.user.create({
-            data: {
-                email: authData.email,
-                password: authData.password,
-            }
-        })
-        return user;
-    }   
+  async hashPassword(password: string): Promise<string> {
+    return await bcrypt.hash(password, 10);
+  }
+
+  async signup(authData: AuthDto): Promise<User | null> {
+    try {
+      const user = this.prisma.user.create({
+        data: {
+          email: authData.email,
+          password: authData.password,
+        },
+      });
+      return user;
+    } catch (error) {
+      return null;
+    }
+  }
+  async signin(authData: AuthDto): Promise<User | null> {
+    return null;
+  }
 }
