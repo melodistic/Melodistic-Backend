@@ -71,17 +71,19 @@ model Track {
 }
 
 model User {
-  user_id                  String           @id(map: "user_pk") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  email                    String           @db.VarChar(255)
-  password                 String?          @db.VarChar(255)
-  oauth_token              String?          @db.VarChar(255)
-  exercise_duration_hour   Int?
-  exercise_duration_minute Int?
-  created_at               DateTime?        @default(now()) @db.Timestamp(6)
-  updated_at               DateTime?        @default(now()) @db.Timestamp(6)
-  GeneratedTrack           GeneratedTrack[]
-  ProcessedMusic           ProcessedMusic[]
-  UserFavorite             UserFavorite[]
+  user_id                         String           @id(map: "user_pk") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email                           String           @db.VarChar(255)
+  password                        String?          @db.VarChar(255)
+  exercise_duration_hour          Int?
+  exercise_duration_minute        Int?
+  created_at                      DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at                      DateTime?        @default(now()) @db.Timestamp(6)
+  email_verification_token        String?          @unique(map: "user_email_verification_token_uindex") @db.VarChar(100)
+  email_verification_token_expiry DateTime?        @db.Timestamp(6)
+  email_verified                  Boolean?         @default(false)
+  GeneratedTrack                  GeneratedTrack[]
+  ProcessedMusic                  ProcessedMusic[]
+  UserFavorite                    UserFavorite[]
 }
 
 model UserFavorite {

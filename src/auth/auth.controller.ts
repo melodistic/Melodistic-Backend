@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -12,6 +13,7 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiInternalServerErrorResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -63,7 +65,6 @@ export class AuthController {
         token,
       };
     } catch (error) {
-      console.log(error);
       throw new BadRequestException();
     }
   }
@@ -82,6 +83,21 @@ export class AuthController {
       return {
         token,
       };
+    } catch (error) {
+      throw new BadRequestException();
+    }
+  }
+
+  @Get('verify')
+  @ApiOperation({ summary: 'Verify user email' })
+  @ApiOkResponse({ description: 'Email is verified' })
+  @ApiBadRequestResponse({ description: 'Token is invalid' })
+  async verifyEmail(@Query('token') token: string): Promise<any> {
+    try {
+      await this.authService.verifyEmail(token);
+      return {
+        success: true
+      }
     } catch (error) {
       throw new BadRequestException();
     }
