@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Auth, google } from 'googleapis';
 import { randomBytes } from 'crypto';
 import { Cache } from 'cache-manager';
+import { ResetPasswordDto, VerifyResetPasswordDto } from './dto/reset-password.dto';
 @Injectable()
 export class AuthService {
   private oauthClient: Auth.OAuth2Client;
@@ -84,18 +85,34 @@ export class AuthService {
       }});
     if (!user) throw new Error('User not found');
     const token = this.generateResetPasswordToken();
-    await this.cacheManager.set(user.user_id, token, { ttl: 3600 });
+    await this.cacheManager.set(user.user_id, token, { ttl: 300 });
     return { email, token };
   }
 
-  async verifyResetPasswordToken(email: string, token: string): Promise<boolean> {
+  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
     const user = await this.prisma.user.findFirst({
       where: {
-        email: email,
+        email: resetPasswordDto.email,
+      },
+    });
+    const hashedPassword = await this.hashPassword(resetPasswordDto.password);
+    await this.prisma.user.update({
+      where: {
+        user_id: user.user_id,
+      },
+      data: {
+        password: hashedPassword,
+      },
+    });
+  }
+
+  async verifyResetPasswordToken(resetPasswordDto: VerifyResetPasswordDto): Promise<boolean> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: resetPasswordDto.email,
       }});
     const resetToken = await this.cacheManager.get(user.user_id);
-    if(resetToken !== token) throw new Error('Token is invalid');
-    this.cacheManager.del(user.user_id);
+    if(resetToken !== resetPasswordDto.token) throw new Error('Token is invalid');
     return true;
   }
 
