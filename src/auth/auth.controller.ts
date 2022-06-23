@@ -24,6 +24,11 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { GoogleAuthDto } from './dto/google-auth.dto';
 import { User } from 'src/decorators/user.decorator';
+import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
+import {
+  ResetPasswordDto,
+  VerifyResetPasswordDto,
+} from './dto/reset-password.dto';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
@@ -88,6 +93,54 @@ export class AuthController {
     }
   }
 
+  @Post('forget-password')
+  @ApiOperation({ summary: 'Reset password request' })
+  @ApiOkResponse({ description: 'Password reset link sent' })
+  @ApiBadRequestResponse({ description: 'Email not found' })
+  async requestResetPassword(
+    @Body() resetPasswordDto: RequestResetPasswordDto,
+  ) {
+    try {
+      return this.authService.requestResetPassword(resetPasswordDto.email);
+    } catch (error) {
+      throw new BadRequestException();
+    }
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password' })
+  @ApiOkResponse({ description: 'Password reset' })
+  @ApiBadRequestResponse({ description: 'Token is invalid' })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    try {
+      if (this.authService.verifyResetPasswordToken(resetPasswordDto)) {
+        await this.authService.resetPassword(resetPasswordDto);
+      }
+      return {
+        success: true,
+      };
+    } catch (error) {
+      throw new BadRequestException();
+    }
+  }
+
+  @Post('reset-password/verify')
+  @ApiOperation({ summary: 'Reset password verify' })
+  @ApiOkResponse({ description: 'Token is valid' })
+  @ApiBadRequestResponse({ description: 'Token is invalid' })
+  async verifyResetPasswordToken(
+    @Body() resetPasswordDto: VerifyResetPasswordDto,
+  ) {
+    try {
+      await this.authService.verifyResetPasswordToken(resetPasswordDto);
+      return {
+        success: true,
+      };
+    } catch (error) {
+      throw new BadRequestException();
+    }
+  }
+
   @Get('verify')
   @ApiOperation({ summary: 'Verify user email' })
   @ApiOkResponse({ description: 'Email is verified' })
@@ -96,8 +149,8 @@ export class AuthController {
     try {
       await this.authService.verifyEmail(token);
       return {
-        success: true
-      }
+        success: true,
+      };
     } catch (error) {
       throw new BadRequestException();
     }
@@ -106,7 +159,7 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiUnauthorizedResponse({description: 'User is not logged in'})
+  @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiInternalServerErrorResponse()
   async getMeInfo(@User() userId: string) {
     return this.userService.findUserById(userId);

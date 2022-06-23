@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { CACHE_MANAGER, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { AuthDto } from './dto/auth.dto';
@@ -7,10 +7,12 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Auth, google } from 'googleapis';
 import { randomBytes } from 'crypto';
+import { Cache } from 'cache-manager';
+import { ResetPasswordDto, VerifyResetPasswordDto } from './dto/reset-password.dto';
 @Injectable()
 export class AuthService {
   private oauthClient: Auth.OAuth2Client;
-  constructor(private prisma: PrismaService, private jwtService: JwtService) {
+  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache , private prisma: PrismaService, private jwtService: JwtService) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     this.oauthClient = new google.auth.OAuth2(clientId, clientSecret);
@@ -23,6 +25,10 @@ export class AuthService {
   generateRandomToken(): string {
     const token = randomBytes(32).toString('hex');
     return token;
+  }
+  
+  generateResetPasswordToken(): string {
+    return Math.random().toString().substring(2, 8);
   }
 
   async generateToken(user: User): Promise<string> {
@@ -70,6 +76,44 @@ export class AuthService {
     } catch (error) {
       return null;
     }
+  }
+
+  async requestResetPassword(email: string): Promise<any> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: email,
+      }});
+    if (!user) throw new Error('User not found');
+    const token = this.generateResetPasswordToken();
+    await this.cacheManager.set(user.user_id, token, { ttl: 300 });
+    return { email, token };
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: resetPasswordDto.email,
+      },
+    });
+    const hashedPassword = await this.hashPassword(resetPasswordDto.password);
+    await this.prisma.user.update({
+      where: {
+        user_id: user.user_id,
+      },
+      data: {
+        password: hashedPassword,
+      },
+    });
+  }
+
+  async verifyResetPasswordToken(resetPasswordDto: VerifyResetPasswordDto): Promise<boolean> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: resetPasswordDto.email,
+      }});
+    const resetToken = await this.cacheManager.get(user.user_id);
+    if(resetToken !== resetPasswordDto.token) throw new Error('Token is invalid');
+    return true;
   }
 
   async signin(authData: AuthDto): Promise<User | null> {
