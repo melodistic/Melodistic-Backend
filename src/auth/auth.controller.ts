@@ -24,6 +24,8 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { GoogleAuthDto } from './dto/google-auth.dto';
 import { User } from 'src/decorators/user.decorator';
+import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
@@ -87,6 +89,35 @@ export class AuthController {
       throw new BadRequestException();
     }
   }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password request' })
+  @ApiOkResponse({ description: 'Password reset link sent' })
+  @ApiBadRequestResponse({ description: 'Email not found' })
+  async requestResetPassword(@Body() resetPasswordDto: RequestResetPasswordDto) {
+    try {
+      return this.authService.requestResetPassword(resetPasswordDto.email);
+    } catch (error) {
+      throw new BadRequestException();
+    }
+  }
+
+  @Post('reset-password/verify')
+  @ApiOperation({ summary: 'Reset password verify' })
+  @ApiOkResponse({ description: 'Token is valid' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiBadRequestResponse({ description: 'Token is invalid' })
+  async verifyResetPasswordToken(@Body() resetPasswordDto: ResetPasswordDto,) {
+    try {
+      await this.authService.verifyResetPasswordToken(resetPasswordDto.email, resetPasswordDto.token);
+      return {
+        success: true
+      }
+    } catch (error) {
+      throw new BadRequestException();
+    }
+  }
+
 
   @Get('verify')
   @ApiOperation({ summary: 'Verify user email' })
