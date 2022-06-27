@@ -1,4 +1,9 @@
-import { CACHE_MANAGER, Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  CACHE_MANAGER,
+  Inject,
+  Injectable,
+  OnModuleInit,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { AuthDto } from './dto/auth.dto';
@@ -8,11 +13,20 @@ import { JwtService } from '@nestjs/jwt';
 import { Auth, google } from 'googleapis';
 import { randomBytes } from 'crypto';
 import { Cache } from 'cache-manager';
-import { ResetPasswordDto, VerifyResetPasswordDto } from './dto/reset-password.dto';
+import {
+  ResetPasswordDto,
+  VerifyResetPasswordDto,
+} from './dto/reset-password.dto';
+import { MailService } from 'src/utils/mail.service';
 @Injectable()
 export class AuthService {
   private oauthClient: Auth.OAuth2Client;
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache , private prisma: PrismaService, private jwtService: JwtService) {
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+    private mailService: MailService,
+  ) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     this.oauthClient = new google.auth.OAuth2(clientId, clientSecret);
@@ -26,7 +40,7 @@ export class AuthService {
     const token = randomBytes(32).toString('hex');
     return token;
   }
-  
+
   generateResetPasswordToken(): string {
     return Math.random().toString().substring(2, 8);
   }
@@ -49,6 +63,7 @@ export class AuthService {
         const user = this.prisma.user.create({
           data: {
             email: tokenInfo.email,
+            email_verified: true,
           },
         });
         return user;
@@ -71,6 +86,7 @@ export class AuthService {
           email_verification_token_expiry: new Date(Date.now() + 3600000),
         },
       });
+      this.mailService.sendEmail(authData.email,"Please verify your email",`<a href="http://localhost:3000/api/auth/verify?token=${token}">Verify Email</a>`);
 
       return user;
     } catch (error) {
@@ -82,10 +98,12 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({
       where: {
         email: email,
-      }});
+      },
+    });
     if (!user) throw new Error('User not found');
     const token = this.generateResetPasswordToken();
     await this.cacheManager.set(user.user_id, token, { ttl: 300 });
+    this.mailService.sendEmail(email,"Here is your reset password token",`Token: ${token}`);
     return { email, token };
   }
 
@@ -106,13 +124,17 @@ export class AuthService {
     });
   }
 
-  async verifyResetPasswordToken(resetPasswordDto: VerifyResetPasswordDto): Promise<boolean> {
+  async verifyResetPasswordToken(
+    resetPasswordDto: VerifyResetPasswordDto,
+  ): Promise<boolean> {
     const user = await this.prisma.user.findFirst({
       where: {
         email: resetPasswordDto.email,
-      }});
+      },
+    });
     const resetToken = await this.cacheManager.get(user.user_id);
-    if(resetToken !== resetPasswordDto.token) throw new Error('Token is invalid');
+    if (resetToken !== resetPasswordDto.token)
+      throw new Error('Token is invalid');
     return true;
   }
 
