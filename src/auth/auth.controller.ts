@@ -29,6 +29,7 @@ import {
   ResetPasswordDto,
   VerifyResetPasswordDto,
 } from './dto/reset-password.dto';
+import { MailService } from '@sendgrid/mail';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
