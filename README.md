@@ -45,6 +45,12 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Running cache storage locally
+
+```bash
+$ docker run -p 6379:6379 --name redis -e REDIS_PASSWORD=${REDIS_PASSWORD} -d redis
+```
+
 ## Test
 
 ```bash

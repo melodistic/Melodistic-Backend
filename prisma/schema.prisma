@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model GeneratedTrack {
+  generated_track_id String    @id(map: "generatedtrack_pk") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id            String?   @db.Uuid
+  track_id           String?   @db.Uuid
+  created_at         DateTime? @default(now()) @db.Timestamp(6)
+  updated_at         DateTime? @default(now()) @db.Timestamp(6)
+  Track              Track?    @relation(fields: [track_id], references: [track_id], onDelete: NoAction, onUpdate: NoAction, map: "generatedtrack_track_track_id_fk")
+  User               User?     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "generatedtrack_user_user_id_fk")
+}
+
+model Music {
+  music_id              String                  @id(map: "music_pk") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  music_name            String?                 @db.VarChar(255)
+  music_path            String?                 @db.VarChar(255)
+  music_feature_path    String?                 @db.VarChar(255)
+  bpm                   Decimal?                @db.Decimal
+  mood                  String?                 @db.VarChar(10)
+  is_system             Boolean?
+  created_at            DateTime?               @default(now()) @db.Timestamp(6)
+  updated_at            DateTime?               @default(now()) @db.Timestamp(6)
+  ProcessedMusicExtract ProcessedMusicExtract[]
+}
+
+model ProcessedMusic {
+  process_id            String                  @id(map: "processedmusic_pk") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id               String?                 @db.Uuid
+  music_name            String?                 @db.VarChar(255)
+  artist_name           String?                 @db.VarChar(255)
+  duration              Int?
+  mood                  String?                 @db.VarChar(10)
+  bpm                   Decimal?                @db.Decimal
+  created_at            DateTime?               @default(now()) @db.Timestamp(6)
+  updated_at            DateTime?               @default(now()) @db.Timestamp(6)
+  User                  User?                   @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "processedmusic_user_user_id_fk")
+  ProcessedMusicExtract ProcessedMusicExtract[]
+}
+
+model ProcessedMusicExtract {
+  processed_music_extract_id String          @id(map: "processedmusicextract_pk") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  processed_id               String?         @db.Uuid
+  music_id                   String?         @db.Uuid
+  created_id                 DateTime?       @default(now()) @db.Timestamp(6)
+  updated_id                 DateTime?       @default(now()) @db.Timestamp(6)
+  Music                      Music?          @relation(fields: [music_id], references: [music_id], onDelete: NoAction, onUpdate: NoAction, map: "processedmusicextract_music_music_id_fk")
+  ProcessedMusic             ProcessedMusic? @relation(fields: [processed_id], references: [process_id], onDelete: NoAction, onUpdate: NoAction, map: "processedmusicextract_processedmusic_process_id_fk")
+}
+
+model Track {
+  track_id        String           @id(map: "track_pk") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  track_name      String?          @db.VarChar(255)
+  track_image_url String?          @db.VarChar(255)
+  track_path      String?          @db.VarChar(255)
+  exercise_type   String?          @db.VarChar(50)
+  muscle_group    String?          @db.VarChar(50)
+  description     String?          @db.VarChar(255)
+  duration        Int?
+  is_public       Boolean?         @default(false)
+  created_at      DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?        @default(now()) @db.Timestamp(6)
+  GeneratedTrack  GeneratedTrack[]
+  UserFavorite    UserFavorite[]
+}
+
+model User {
+  user_id                         String           @id(map: "user_pk") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email                           String           @db.VarChar(255)
+  password                        String?          @db.VarChar(255)
+  exercise_duration_hour          Int?
+  exercise_duration_minute        Int?
+  created_at                      DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at                      DateTime?        @default(now()) @db.Timestamp(6)
+  email_verification_token        String?          @unique(map: "user_email_verification_token_uindex") @db.VarChar(100)
+  email_verification_token_expiry DateTime?        @db.Timestamp(6)
+  email_verified                  Boolean?         @default(false)
+  GeneratedTrack                  GeneratedTrack[]
+  ProcessedMusic                  ProcessedMusic[]
+  UserFavorite                    UserFavorite[]
+}
+
+model UserFavorite {
+  user_favorite_id String    @id(map: "userfavorite_pk") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id          String?   @db.Uuid
+  track_id         String?   @db.Uuid
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @default(now()) @db.Timestamp(6)
+  Track            Track?    @relation(fields: [track_id], references: [track_id], onDelete: NoAction, onUpdate: NoAction, map: "userfavorite_track_track_id_fk")
+  User             User?     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "userfavorite_user_user_id_fk")
+}
