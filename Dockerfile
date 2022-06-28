@@ -1,19 +1,19 @@
-FROM node:lts-slim as builder
+FROM node:latest as builder
 
 WORKDIR /app
 
-COPY package.json .
+COPY package.json ./
 
 RUN yarn
 
-COPY . .
+COPY ./ ./
 
 RUN npx prisma generate
 
 RUN yarn build
 
 
-FROM node:lts-slim as runner
+FROM node:14-alpine as runner
 
 WORKDIR /app
 
