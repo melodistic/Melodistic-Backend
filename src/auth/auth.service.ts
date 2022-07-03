@@ -4,8 +4,7 @@ import {
   Injectable,
   OnModuleInit,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
-import { AuthResponseDto } from './dto/auth-response.dto';
+import { PrismaService } from '../prisma.service';
 import { AuthDto } from './dto/auth.dto';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -17,7 +16,7 @@ import {
   ResetPasswordDto,
   VerifyResetPasswordDto,
 } from './dto/reset-password.dto';
-import { MailService } from 'src/utils/mail.service';
+import { MailService } from '../utils/mail.service';
 @Injectable()
 export class AuthService {
   private oauthClient: Auth.OAuth2Client;
