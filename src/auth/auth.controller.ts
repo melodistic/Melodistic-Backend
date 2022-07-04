@@ -114,7 +114,8 @@ export class AuthController {
   @ApiBadRequestResponse({ description: 'Token is invalid' })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     try {
-      if (this.authService.verifyResetPasswordToken(resetPasswordDto)) {
+      const tokenValid = await this.authService.verifyResetPasswordToken(resetPasswordDto);
+      if (tokenValid) {
         await this.authService.resetPassword(resetPasswordDto);
       }
       return {

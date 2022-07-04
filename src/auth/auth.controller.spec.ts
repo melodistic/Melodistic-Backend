@@ -12,6 +12,8 @@ import { CacheModule } from '@nestjs/common';
 import * as redisStore from 'cache-manager-redis-store';
 import { Cache } from 'cache-manager';
 import { AuthDto } from './dto/auth.dto';
+import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
+import { ResetPasswordDto, VerifyResetPasswordDto } from './dto/reset-password.dto';
 
 describe('Auth Controller', () => {
   let authController: AuthController;
@@ -23,8 +25,10 @@ describe('Auth Controller', () => {
 
   const userEmail = 'test@test.com';
   const userPassword = 'test';
-
-  beforeEach(async () => {
+  const userNewPassword = 'thisisnewpassword'
+  let verifyEmailToken = '';
+  let resetPasswordToken = '';
+  beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [
         UserModule,
@@ -68,6 +72,7 @@ describe('Auth Controller', () => {
     dto.password = userPassword;
     const value = await authController.signup(dto);
     expect(value).toHaveProperty('token');
+    verifyEmailToken = await authService.getVerifyEmailToken(userEmail);
   });
   it('Register User Fail because of email already exists', () => {
     const dto = new AuthDto();
@@ -100,6 +105,67 @@ describe('Auth Controller', () => {
       await authController.signin(dto);
     }).rejects.toThrow();
   });
+  it('Verify Email Successfully', async () => {
+    const value = await authController.verifyEmail(verifyEmailToken);
+    expect(value.success).toBeTruthy()
+  })
+  it('Verify Email Fail because of token not correct', () => {
+    expect(async() => {
+      await authController.verifyEmail('123456')
+    }).rejects.toThrow();
+  })
+  it('Verify Email Fail because of email is already verified', async () => {
+    expect(async() => {
+      await authController.verifyEmail(verifyEmailToken)
+    }).rejects.toThrow();
+  })
+  it('Forget Password should return token', async () =>  {
+    const dto = new RequestResetPasswordDto();
+    dto.email = userEmail;
+    const value = await authController.requestResetPassword(dto);
+    expect(value).toHaveProperty('token');
+    resetPasswordToken = value.token;
+  })
+  it('Forget Password should throw error because of email not exists', async () =>  {
+    const dto = new RequestResetPasswordDto();
+    dto.email = 'someEmail@email.com'
+    expect(async () => {
+      await authController.requestResetPassword(dto);
+    }).rejects.toThrow();
+  })
+  it('Token from forget password should be valid', async () =>  {
+    const dto = new VerifyResetPasswordDto();
+    dto.email = userEmail;
+    dto.token = resetPasswordToken;
+    const value = await authController.verifyResetPasswordToken(dto);
+    expect(value.success).toBeTruthy();
+  })
+  it('Random token should be invalid', async() => {
+    const dto = new VerifyResetPasswordDto();
+    dto.email = userEmail;
+    dto.token = '123456';
+    expect(async () => {
+      await authController.verifyResetPasswordToken(dto)
+    }).rejects.toThrow();
+  })
+  it('Reset Password should be success when token is valid', async() => {
+    const dto = new ResetPasswordDto();
+    dto.email = userEmail;
+    dto.token = resetPasswordToken;
+    dto.password = userNewPassword;
+    const value = await authController.resetPassword(dto);
+    expect(value.success).toBeTruthy();
+  })
+  it('Reset Password should be fail when token is invalid', async() => {
+    const dto = new ResetPasswordDto();
+    dto.email = userEmail;
+    dto.token = '123456';
+    dto.password = userNewPassword;
+    expect(async () => {
+      await authController.resetPassword(dto)
+    }).rejects.toThrow();
+  })
+
   afterAll(async () => {
     await prismaService.user.deleteMany({
       where: {
