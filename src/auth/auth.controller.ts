@@ -19,17 +19,17 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { AuthDto } from './dto/auth.dto';
-import { UserService } from 'src/user/user.service';
+import { UserService } from '../user/user.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { GoogleAuthDto } from './dto/google-auth.dto';
-import { User } from 'src/decorators/user.decorator';
+import { User } from '../decorators/user.decorator';
 import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
 import {
   ResetPasswordDto,
   VerifyResetPasswordDto,
 } from './dto/reset-password.dto';
-import { MailService } from '@sendgrid/mail';
+
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
@@ -114,7 +114,8 @@ export class AuthController {
   @ApiBadRequestResponse({ description: 'Token is invalid' })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     try {
-      if (this.authService.verifyResetPasswordToken(resetPasswordDto)) {
+      const tokenValid = await this.authService.verifyResetPasswordToken(resetPasswordDto);
+      if (tokenValid) {
         await this.authService.resetPassword(resetPasswordDto);
       }
       return {

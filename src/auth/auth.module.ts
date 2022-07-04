@@ -1,14 +1,14 @@
 import { CacheModule, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { EnvironmentVariable } from 'src/config/env.types';
-import { PrismaService } from 'src/prisma.service';
-import { UserModule } from 'src/user/user.module';
+import { EnvironmentVariable } from '../config/env.types';
+import { PrismaService } from '../prisma.service';
+import { UserModule } from '../user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import * as redisStore from 'cache-manager-redis-store';
-import { MailService } from 'src/utils/mail.service';
+import { MailService } from '../utils/mail.service';
 
 @Module({
   imports: [

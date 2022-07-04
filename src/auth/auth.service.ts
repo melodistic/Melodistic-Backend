@@ -1,11 +1,10 @@
 import {
+  BadRequestException,
   CACHE_MANAGER,
   Inject,
   Injectable,
-  OnModuleInit,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
-import { AuthResponseDto } from './dto/auth-response.dto';
+import { PrismaService } from '../prisma.service';
 import { AuthDto } from './dto/auth.dto';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -17,7 +16,7 @@ import {
   ResetPasswordDto,
   VerifyResetPasswordDto,
 } from './dto/reset-password.dto';
-import { MailService } from 'src/utils/mail.service';
+import { MailService } from '../utils/mail.service';
 @Injectable()
 export class AuthService {
   private oauthClient: Auth.OAuth2Client;
@@ -87,7 +86,7 @@ export class AuthService {
         },
       });
       const API_ENDPOINT = process.env.API_ENDPOINT || 'http://localhost:3000';
-      this.mailService.sendEmail(authData.email,"Please verify your email",`<a href="${API_ENDPOINT}/api/auth/verify?token=${token}">Verify Email</a>`);
+      await this.mailService.sendEmail(authData.email,"Please verify your email",`<a href="${API_ENDPOINT}/api/auth/verify?token=${token}">Verify Email</a>`);
 
       return user;
     } catch (error) {
@@ -101,10 +100,10 @@ export class AuthService {
         email: email,
       },
     });
-    if (!user) throw new Error('User not found');
+    if (!user) throw new BadRequestException('User not found');
     const token = this.generateResetPasswordToken();
     await this.cacheManager.set(user.user_id, token, { ttl: 300 });
-    this.mailService.sendEmail(email,"Here is your reset password token",`Token: ${token}`);
+    await this.mailService.sendEmail(email,"Here is your reset password token",`Token: ${token}`);
     return { email, token };
   }
 
@@ -135,7 +134,7 @@ export class AuthService {
     });
     const resetToken = await this.cacheManager.get(user.user_id);
     if (resetToken !== resetPasswordDto.token)
-      throw new Error('Token is invalid');
+      throw new BadRequestException('Token is invalid');
     return true;
   }
 
@@ -155,6 +154,16 @@ export class AuthService {
     }
   }
 
+  async getVerifyEmailToken(email: string): Promise<string> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: email,
+      },
+    });
+    if (!user) throw new BadRequestException('User not found');
+    return user.email_verification_token;
+  }
+
   async verifyEmail(token: string): Promise<boolean> {
     try {
       const existingUser = await this.prisma.user.findFirst({
@@ -162,11 +171,11 @@ export class AuthService {
           email_verification_token: token,
         },
       });
-      if (!existingUser) throw new Error('Token is invalid');
+      if (!existingUser) throw new BadRequestException('Token is invalid');
       if (existingUser.email_verified)
-        throw new Error('Email is already verified');
+        throw new BadRequestException('Email is already verified');
       if (existingUser.email_verification_token_expiry < new Date())
-        throw new Error('Token has expired');
+        throw new BadRequestException('Token has expired');
       await this.prisma.user.update({
         data: {
           email_verified: true,
