@@ -13,7 +13,7 @@ RUN npx prisma generate
 RUN yarn build
 
 
-FROM node:14-alpine as runner
+FROM node:16 as runner
 
 WORKDIR /app
 
