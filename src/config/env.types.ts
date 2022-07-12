@@ -3,4 +3,5 @@ export interface EnvironmentVariable {
     NODE_ENV: string
     SENDGRID_API_KEY: string
     EMAIL_FROM_ADDRESS: string
+    API_ENDPOINT: string
 }
