@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
-  binaryTargets = ["native","linux-musl"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl"]
 }
 
 datasource db {
@@ -75,6 +75,7 @@ model User {
   user_id                         String           @id(map: "user_pk") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   email                           String           @db.VarChar(255)
   password                        String?          @db.VarChar(255)
+  user_profile_image              String?          @db.VarChar(255)
   exercise_duration_hour          Int?
   exercise_duration_minute        Int?
   created_at                      DateTime?        @default(now()) @db.Timestamp(6)
