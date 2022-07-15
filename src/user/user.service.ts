@@ -112,4 +112,19 @@ export class UserService {
       };
     }
   }
+
+  async uploadImage(userId: string, image: string): Promise<any> {
+    await this.prisma.user.update({
+      where: {
+        user_id: userId,
+      },
+      data: {
+        user_profile_image: image,
+      },
+    });
+    return {
+      status: 200,
+      message: 'Image uploaded',
+    };
+  }
 }
