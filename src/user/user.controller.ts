@@ -5,22 +5,38 @@ import {
   Get,
   Post,
   Query,
+  UnsupportedMediaTypeException,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiInternalServerErrorResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
+  ApiUnsupportedMediaTypeResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { User } from 'src/decorators/user.decorator';
 import { UserFavoriteDto } from './dto/user-favorite.dto';
+import { renameSync } from 'fs'
+import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadImageDto } from './dto/upload-image.dto';
+
+const fileFilter: MulterOptions['fileFilter'] = (_, file, cb) => {
+	if (file.mimetype === 'image/png' || file.mimetype === 'image/jpeg' || file.mimetype === 'image/heic')
+		return cb(null, true)
+	cb(new UnsupportedMediaTypeException('Only png, jpeg and heic images are allowed'), false)
+}
+const uploadPath = './uploads/'
 
 @ApiTags('User')
 @Controller('user')
@@ -52,5 +68,23 @@ export class UserController {
     @ApiInternalServerErrorResponse()
     async toggleFavorite(@User() userId: string, @Body() favorite: UserFavoriteDto): Promise<any> {
         return this.userService.toggleFavorite(userId, favorite.track_id);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @UseInterceptors(FileInterceptor('image', { dest: uploadPath, fileFilter, limits: { fileSize: 5 << 20 } }))
+    @Post('image')
+    @ApiConsumes('multipart/form-data')
+    @ApiBearerAuth()
+    @ApiUnauthorizedResponse({ description: 'User is not logged in' })
+    @ApiInternalServerErrorResponse()
+    @ApiUnsupportedMediaTypeResponse()
+    async uploadProfileImage(@User() userId: string, @Body() body: UploadImageDto, @UploadedFile() file: Express.Multer.File): Promise<any> {
+      try {
+        const filepath = `${uploadPath}${userId}.${file.mimetype.split('/')[1]}`
+        renameSync(file.path, filepath)
+        return this.userService.uploadImage(userId, filepath);
+      } catch (e) {
+        throw new BadRequestException('Invalid image')
+      }
     }
 }
