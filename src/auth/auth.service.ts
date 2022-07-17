@@ -51,7 +51,6 @@ export class AuthService {
   async authWithGoogle(token: string): Promise<User | null> {
     try {
       const tokenInfo = await this.oauthClient.getTokenInfo(token);
-      console.log(tokenInfo);
 
       const existingUser = await this.prisma.user.findFirst({
         where: {
@@ -69,7 +68,6 @@ export class AuthService {
       }
       return existingUser;
     } catch (error) {
-      console.log(error);
       return null;
     }
   }
