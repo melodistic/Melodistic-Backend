@@ -60,6 +60,7 @@ model Track {
   track_name      String?          @db.VarChar(255)
   track_image_url String?          @db.VarChar(255)
   track_path      String?          @db.VarChar(255)
+  exercise_type   String?          @db.VarChar(50)
   muscle_group    String?          @db.VarChar(50)
   description     String?          @db.VarChar(255)
   duration        Int?
