@@ -27,16 +27,9 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { User } from 'src/decorators/user.decorator';
 import { UserFavoriteDto } from './dto/user-favorite.dto';
 import { renameSync } from 'fs'
-import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
+import { uploadPath, fileFilter } from '../config/file.config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadImageDto } from './dto/upload-image.dto';
-
-const fileFilter: MulterOptions['fileFilter'] = (_, file, cb) => {
-	if (file.mimetype === 'image/png' || file.mimetype === 'image/jpeg' || file.mimetype === 'image/heic')
-		return cb(null, true)
-	cb(new UnsupportedMediaTypeException('Only png, jpeg and heic images are allowed'), false)
-}
-const uploadPath = './uploads/'
 
 @ApiTags('User')
 @Controller('user')
@@ -80,7 +73,7 @@ export class UserController {
     @ApiUnsupportedMediaTypeResponse()
     async uploadProfileImage(@User() userId: string, @Body() body: UploadImageDto, @UploadedFile() file: Express.Multer.File): Promise<any> {
       try {
-        const filepath = `${uploadPath}${userId}.${file.mimetype.split('/')[1]}`
+        const filepath = `${uploadPath}/user/${userId}.${file.mimetype.split('/')[1]}`
         renameSync(file.path, filepath)
         return this.userService.uploadImage(userId, filepath);
       } catch (e) {
