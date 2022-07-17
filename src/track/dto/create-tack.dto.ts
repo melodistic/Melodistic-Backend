@@ -48,7 +48,6 @@ export class CreateTrackDto {
   @IsNotEmpty()
   @ArrayNotEmpty()
   @IsArray()
-  @Type(() => Section)
   @ValidateNested({ each: true })
   sections: [Section];
 }
