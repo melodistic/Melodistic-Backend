@@ -27,7 +27,7 @@ import { CreateTrackDto } from './dto/create-tack.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { uploadPath, fileFilter } from '../config/file.config';
 import { UpdateImageDto } from './dto/update-image.dto';
-import { unlinkSync, renameSync } from 'fs';
+import { unlinkSync, renameSync, existsSync, mkdirSync } from 'fs';
 
 @ApiTags('Track')
 @Controller('track')
@@ -113,6 +113,9 @@ export class TrackController {
         programImage.mimetype.split('/')[1],
       );
       const filepath = `${uploadPath}/track/${trackId}.${programImage.mimetype.split('/')[1]}`
+      if(!existsSync(`${uploadPath}/track`)) {
+        mkdirSync(`${uploadPath}/track`)
+      }
       renameSync(programImage.path, filepath)
       return updatedTrack;
     } catch (error) {

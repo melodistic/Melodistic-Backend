@@ -6,9 +6,13 @@ COPY package.json ./
 
 RUN yarn
 
-COPY ./ ./
+RUN mkdir ./prisma
+
+COPY ./prisma/schema.prisma ./prisma/
 
 RUN npx prisma generate
+
+COPY ./ ./
 
 RUN yarn build
 

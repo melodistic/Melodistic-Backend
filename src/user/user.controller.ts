@@ -26,7 +26,7 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { User } from 'src/decorators/user.decorator';
 import { UserFavoriteDto } from './dto/user-favorite.dto';
-import { renameSync } from 'fs'
+import { renameSync, mkdirSync, existsSync } from 'fs'
 import { uploadPath, fileFilter } from '../config/file.config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadImageDto } from './dto/upload-image.dto';
@@ -74,6 +74,9 @@ export class UserController {
     async uploadProfileImage(@User() userId: string, @Body() body: UploadImageDto, @UploadedFile() file: Express.Multer.File): Promise<any> {
       try {
         const filepath = `${uploadPath}/user/${userId}.${file.mimetype.split('/')[1]}`
+        if(!existsSync(`${uploadPath}/user`)) {
+          mkdirSync(`${uploadPath}/user`)
+        }
         renameSync(file.path, filepath)
         return this.userService.uploadImage(userId, filepath);
       } catch (e) {
