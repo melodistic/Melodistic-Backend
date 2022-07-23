@@ -6,4 +6,4 @@ export const fileFilter: MulterOptions['fileFilter'] = (_, file, cb) => {
 		return cb(null, true)
 	cb(new UnsupportedMediaTypeException('Only png, jpeg and heic images are allowed'), false)
 }
-export const uploadPath = './uploads/'
+export const uploadPath = '/app/uploads/'
