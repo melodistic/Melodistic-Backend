@@ -41,7 +41,7 @@ export class TrackService {
 
   async createTrack(userId: string, track: CreateTrackDto): Promise<any> {
     const response = await this.httpService.axiosRef.post(
-      'https://melodistic.ggolfz.me/api/generate',
+      '/api/generate',
       {
         program_name: track.program_name,
         muscle_group: track.muscle_group,
