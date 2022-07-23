@@ -69,8 +69,7 @@ export class TrackController {
   @ApiInternalServerErrorResponse()
   async createTrack(
     @User() userId: string,
-    @Body() track: CreateTrackDto,
-    @UploadedFile() programImage: Express.Multer.File,
+    @Body() track: CreateTrackDto
   ): Promise<any> {
     try {
       const createdTrack = await this.trackService.createTrack(userId, track);
@@ -119,7 +118,6 @@ export class TrackController {
       renameSync(programImage.path, filepath)
       return updatedTrack;
     } catch (error) {
-      console.log(error)
       throw new BadRequestException();
     }
   }
