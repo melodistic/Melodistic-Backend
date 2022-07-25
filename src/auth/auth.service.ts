@@ -84,7 +84,7 @@ export class AuthService {
         },
       });
       const API_ENDPOINT = process.env.API_ENDPOINT || 'http://localhost:3000';
-      await this.mailService.sendEmail(authData.email,"Please verify your email",`<a href="${API_ENDPOINT}/api/auth/verify?token=${token}">Verify Email</a>`);
+      await this.mailService.sendEmail(authData.email, "Please verify your email",`<a href="${API_ENDPOINT}/api/auth/verify?token=${token}">Verify Email</a>`);
 
       return user;
     } catch (error) {
@@ -98,7 +98,7 @@ export class AuthService {
         email: email,
       },
     });
-    if (!user) throw new BadRequestException('User not found');
+    if (!user) throw new BadRequestException('Email not found');
     const token = this.generateResetPasswordToken();
     await this.cacheManager.set(user.user_id, token, { ttl: 300 });
     await this.mailService.sendEmail(email,"Here is your reset password token",`Token: ${token}`);
@@ -131,9 +131,7 @@ export class AuthService {
       },
     });
     const resetToken = await this.cacheManager.get(user.user_id);
-    if (resetToken !== resetPasswordDto.token)
-      throw new BadRequestException('Token is invalid');
-    return true;
+    return resetToken !== resetPasswordDto.token;
   }
 
   async signin(authData: AuthDto): Promise<User | null> {
