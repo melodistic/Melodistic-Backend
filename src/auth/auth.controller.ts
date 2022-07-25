@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  InternalServerErrorException,
   Post,
   Query,
   UseGuards,
@@ -39,17 +40,26 @@ export class AuthController {
   ) {}
 
   @Post('google')
+  @ApiOperation({ summary: 'Authenticate with Google' })
+  @ApiOkResponse({ description: 'Authenticate success' })
+  @ApiBadRequestResponse({ description: 'Fail to authenticate' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async googleAuth(@Body() authData: GoogleAuthDto): Promise<AuthResponseDto> {
-    const user = await this.authService.authWithGoogle(authData.token);
-    if (!user) throw new BadRequestException();
-    const token = await this.authService.generateToken(user);
-    return { token };
+    try {
+      const user = await this.authService.authWithGoogle(authData.token);
+      if (!user) throw new BadRequestException('Fail to authenticate');
+      const token = await this.authService.generateToken(user);
+      return { token };
+    } catch (error) {
+      throw new InternalServerErrorException('Internal Server Error');
+    }
   }
 
   @Post('signup')
   @ApiOperation({ summary: 'Signup new user' })
   @ApiCreatedResponse({ description: 'User created' })
   @ApiBadRequestResponse({ description: 'Email already exists' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async signup(@Body() authData: AuthDto): Promise<AuthResponseDto> {
     try {
       const existingUser = await this.userService.findUserByEmail(
@@ -64,33 +74,35 @@ export class AuthController {
 
       const user = await this.authService.signup(authData);
 
-      if (user === null) throw new BadRequestException();
+      if (user === null) throw new BadRequestException('Fail to create user');
 
       const token = await this.authService.generateToken(user);
       return {
         token,
       };
     } catch (error) {
-      throw new BadRequestException();
+      throw new InternalServerErrorException('Internal Server Error');
     }
   }
 
   @Post('signin')
   @ApiOperation({ summary: 'Signin existing user' })
-  @ApiCreatedResponse({ description: 'User signed in' })
+  @ApiOkResponse({ description: 'User signed in' })
   @ApiBadRequestResponse({ description: 'Email or password is incorrect' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async signin(@Body() authData: AuthDto): Promise<AuthResponseDto> {
     try {
       const user = await this.authService.signin(authData);
 
-      if (user === null) throw new BadRequestException();
+      if (user === null)
+        throw new BadRequestException('Email or password is incorrect');
 
       const token = await this.authService.generateToken(user);
       return {
         token,
       };
     } catch (error) {
-      throw new BadRequestException();
+      throw new InternalServerErrorException('Internal Server Error');
     }
   }
 
@@ -98,13 +110,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset password request' })
   @ApiOkResponse({ description: 'Password reset link sent' })
   @ApiBadRequestResponse({ description: 'Email not found' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async requestResetPassword(
     @Body() resetPasswordDto: RequestResetPasswordDto,
   ) {
     try {
       return this.authService.requestResetPassword(resetPasswordDto.email);
     } catch (error) {
-      throw new BadRequestException();
+      throw new InternalServerErrorException('Internal Server Error');
     }
   }
 
@@ -112,17 +125,19 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset password' })
   @ApiOkResponse({ description: 'Password reset' })
   @ApiBadRequestResponse({ description: 'Token is invalid' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     try {
-      const tokenValid = await this.authService.verifyResetPasswordToken(resetPasswordDto);
-      if (tokenValid) {
-        await this.authService.resetPassword(resetPasswordDto);
-      }
+      const tokenValid = await this.authService.verifyResetPasswordToken(
+        resetPasswordDto,
+      );
+      if (!tokenValid) throw new BadRequestException('Token is invalid');
+      await this.authService.resetPassword(resetPasswordDto);
       return {
         success: true,
       };
     } catch (error) {
-      throw new BadRequestException();
+      throw new InternalServerErrorException('Internal Server Error');
     }
   }
 
@@ -130,16 +145,18 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset password verify' })
   @ApiOkResponse({ description: 'Token is valid' })
   @ApiBadRequestResponse({ description: 'Token is invalid' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async verifyResetPasswordToken(
     @Body() resetPasswordDto: VerifyResetPasswordDto,
   ) {
     try {
-      await this.authService.verifyResetPasswordToken(resetPasswordDto);
+      const tokenValid = await this.authService.verifyResetPasswordToken(resetPasswordDto);
+      if(!tokenValid) throw new BadRequestException('Token is invalid');
       return {
         success: true,
       };
     } catch (error) {
-      throw new BadRequestException();
+      throw new InternalServerErrorException('Internal Server Error');
     }
   }
 
@@ -147,6 +164,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify user email' })
   @ApiOkResponse({ description: 'Email is verified' })
   @ApiBadRequestResponse({ description: 'Token is invalid' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async verifyEmail(@Query('token') token: string): Promise<any> {
     try {
       await this.authService.verifyEmail(token);
@@ -154,16 +172,24 @@ export class AuthController {
         success: true,
       };
     } catch (error) {
-      throw new BadRequestException();
+      throw new InternalServerErrorException('Internal Server Error');
     }
   }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @ApiOkResponse({ description: 'Get Information Success' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
-  @ApiInternalServerErrorResponse()
+  @ApiBadRequestResponse({ description: 'User not found' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async getMeInfo(@User() userId: string) {
-    return this.userService.findUserById(userId);
+    try {
+      const user = await this.userService.findUserById(userId);
+      if(!user) throw new BadRequestException('User not found');
+      return user;
+    } catch (error) {
+      throw new InternalServerErrorException('Internal Server Error');
+    }
   }
 }
