@@ -52,6 +52,22 @@ $ npm run start:prod
 ```bash
 $ docker run -p 6379:6379 --name redis -e REDIS_PASSWORD=${REDIS_PASSWORD} -d redis
 ```
+## Running database locally
+```bash
+docker run -p 5432:5432 -e POSTGRES_PASSWORD=melodistic-pwd -e POSTGRES_USER=melodistic -e POSTGRES_DB=melodistic  postgres
+```
+
+## SQL Script for init uuidv4 for postgres DB
+
+```sql
+create extension if not exists "uuid-ossp";
+```
+
+## Sync DB
+```bash
+npx prisma generate
+npx prisma db push
+```
 
 ## Test
 
