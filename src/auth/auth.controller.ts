@@ -124,11 +124,9 @@ export class AuthController {
     @Body() resetPasswordDto: RequestResetPasswordDto,
   ) {
     try {
-      return this.authService.requestResetPassword(resetPasswordDto.email);
+      const result = await this.authService.requestResetPassword(resetPasswordDto.email);
+      return result
     } catch (error) {
-      if(error.response) {
-        throw error;
-      }
       throw new InternalServerErrorException('Internal Server Error');
     }
   }
@@ -190,9 +188,6 @@ export class AuthController {
         success: true,
       };
     } catch (error) {
-      if(error.response) {
-        throw error;
-      }
       throw new InternalServerErrorException('Internal Server Error');
     }
   }

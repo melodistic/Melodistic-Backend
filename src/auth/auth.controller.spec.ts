@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UserService } from '../user/user.service';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
 
 const mockData = {
   user: {
@@ -49,16 +49,9 @@ describe('Auth Controller', () => {
       .spyOn(authService, 'generateResetPasswordToken')
       .mockReturnValue(mockData.resetPasswordToken);
     jest.spyOn(authService, 'generateToken').mockResolvedValue(mockData.token);
-    jest.spyOn(authService, 'verifyEmail').mockResolvedValue(true);
     jest
       .spyOn(authService, 'getVerifyEmailToken')
       .mockResolvedValue(mockData.randomToken);
-    jest.spyOn(authService, 'resetPassword');
-    jest.spyOn(authService, 'requestResetPassword').mockResolvedValue({
-      email: mockData.user.email,
-      token: mockData.resetPasswordToken,
-    });
-    jest.spyOn(userService, 'findUserById').mockResolvedValue(mockData.user);
   });
   afterEach(() => {
     jest.resetAllMocks();
@@ -81,6 +74,15 @@ describe('Auth Controller', () => {
     };
     await expect(authController.googleAuth(authData)).rejects.toThrow(
       new BadRequestException('Fail to authenticate'),
+    );
+  });
+  it('POST /auth/google should throw error if something went wrong', async () => {
+    jest.spyOn(authService, 'authWithGoogle').mockRejectedValue('error');
+    const authData = {
+      token: 'token',
+    };
+    await expect(authController.googleAuth(authData)).rejects.toThrow(
+      new InternalServerErrorException('Internal Server Error'),
     );
   });
   it('POST /auth/signup should return token', async () => {
@@ -122,6 +124,16 @@ describe('Auth Controller', () => {
       new BadRequestException('Fail to create user'),
     )
   })
+  it('POST /auth/signup should throw error if something went wrong', async () => {
+    jest.spyOn(userService, 'findUserByEmail').mockRejectedValue('error');
+    const authData = {
+      email: 'test@test.com',
+      password: 'test',
+    };
+    await expect(authController.signup(authData)).rejects.toThrow(
+      new InternalServerErrorException('Internal Server Error'),
+    )
+  });
   it('POST /auth/signin should return token', async () => {
     jest.spyOn(authService, 'signin').mockResolvedValue(mockData.user);
     const authData = {
@@ -143,7 +155,21 @@ describe('Auth Controller', () => {
       new BadRequestException('Email or password is incorrect'),
     );
   })
+  it('POST /auth/signin should throw error if something went wrong', async () => {
+    jest.spyOn(authService, 'signin').mockRejectedValue('error');
+    const authData = {
+      email: 'test@test.com',
+      password: 'test',
+    };
+    await expect(authController.signin(authData)).rejects.toThrow(
+      new InternalServerErrorException('Internal Server Error'),
+    )
+  });
   it('POST /auth/forget-password should return email and token', async() => {
+    jest.spyOn(authService, 'requestResetPassword').mockResolvedValue({
+      email: mockData.user.email,
+      token: mockData.resetPasswordToken,
+    });
     const requestResetPasswordDto = {
       email: 'test@test.com',
     }
@@ -154,6 +180,15 @@ describe('Auth Controller', () => {
       token: mockData.resetPasswordToken,
     });
   })
+  it('POST /auth/forget-password  should throw error if something went wrong', async () => {
+    jest.spyOn(authService, 'requestResetPassword').mockRejectedValue('error');
+    const requestResetPasswordDto = {
+      email: 'test@test.com',
+    }
+    await expect(authController.requestResetPassword(requestResetPasswordDto)).rejects.toThrow(
+      new InternalServerErrorException('Internal Server Error'),
+    )
+  });
   it('POST /auth/reset-password/verify should return success', async () => {
     jest.spyOn(authService, 'verifyResetPasswordToken').mockResolvedValue(true);
     const verifyResetPasswordDto = {
@@ -176,6 +211,16 @@ describe('Auth Controller', () => {
       new BadRequestException('Token is invalid'),
     );
   })
+  it('POST /auth/forget-password/verify should throw error if something went wrong', async () => {
+    jest.spyOn(authService, 'verifyResetPasswordToken').mockRejectedValue('error');
+    const verifyResetPasswordDto = {
+      email: 'test@test.com',
+      token: mockData.resetPasswordToken,
+    }
+    await expect(authController.verifyResetPasswordToken(verifyResetPasswordDto)).rejects.toThrow(
+      new InternalServerErrorException('Internal Server Error'),
+    )
+  });
   it('POST /auth/reset-password should return success', async () => {
     jest.spyOn(authService, 'verifyResetPasswordToken').mockResolvedValue(true);
     const resetPasswordDto = {
@@ -201,16 +246,47 @@ describe('Auth Controller', () => {
       new BadRequestException('Token is invalid'),
     );
   })
+  it('POST /auth/reset-password should throw error if something went wrong', async () => {
+    jest.spyOn(authService, 'verifyResetPasswordToken').mockRejectedValue('error');
+    const resetPasswordDto = {
+      email: 'test@test.com',
+      token: mockData.resetPasswordToken,
+      password: 'test',
+    }
+    await expect(authController.resetPassword(resetPasswordDto)).rejects.toThrow(
+      new InternalServerErrorException('Internal Server Error'),
+    )
+  });
   it('POST /auth/verify should return success', async () => {
+    jest.spyOn(authService, 'verifyEmail').mockResolvedValue(true);
     const result = await authController.verifyEmail(mockData.randomToken);
     expect(authService.verifyEmail).toHaveBeenCalledWith(mockData.randomToken);
     expect(result).toEqual({
       success: true
     });
   })
+  it('POST /auth/verify should throw error if something went wrong', async () => {
+    jest.spyOn(authService, 'verifyEmail').mockRejectedValue('error');
+    await expect(authController.verifyEmail(mockData.randomToken)).rejects.toThrow(
+      new InternalServerErrorException('Internal Server Error'),
+    )
+  });
   it('GET /auth/me should return user', async() => {
+    jest.spyOn(userService, 'findUserById').mockResolvedValue(mockData.user);
     const result = await authController.getMeInfo(mockData.user.user_id);
     expect(userService.findUserById).toHaveBeenCalledWith(mockData.user.user_id);
     expect(result).toEqual(mockData.user);
   })
+  it('POST /auth/me should throw error if user not found', async () => {
+    jest.spyOn(userService, 'findUserById').mockResolvedValue(null);
+    await expect(authController.getMeInfo(mockData.user.user_id)).rejects.toThrow(
+      new BadRequestException('User not found'),
+    )
+  });
+  it('POST /auth/me should throw error if something went wrong', async () => {
+    jest.spyOn(userService, 'findUserById').mockRejectedValue('error');
+    await expect(authController.getMeInfo(mockData.user.user_id)).rejects.toThrow(
+      new InternalServerErrorException('Internal Server Error'),
+    )
+  });
 });
