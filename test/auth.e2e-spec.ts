@@ -1,18 +1,18 @@
 import { Test } from '@nestjs/testing';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy';
-import { UserModule } from '../user/user.module';
-import { PrismaService } from '../prisma.service';
-import { MailService } from '../utils/mail.service';
+import { AuthController } from '../src/auth/auth.controller';
+import { AuthService } from '../src/auth/auth.service';
+import { JwtStrategy } from '../src/auth/jwt.strategy';
+import { UserModule } from '../src/user/user.module';
+import { PrismaService } from '../src/prisma.service';
+import { MailService } from '../src/utils/mail.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { EnvironmentVariable } from '../config/env.types';
+import { EnvironmentVariable } from '../src/config/env.types';
 import { CacheModule } from '@nestjs/common';
 import * as redisStore from 'cache-manager-redis-store';
-import { AuthDto } from './dto/auth.dto';
-import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
-import { ResetPasswordDto, VerifyResetPasswordDto } from './dto/reset-password.dto';
+import { AuthDto } from '../src/auth/dto/auth.dto';
+import { RequestResetPasswordDto } from '../src/auth/dto/request-reset-password.dto';
+import { ResetPasswordDto, VerifyResetPasswordDto } from '../src/auth/dto/reset-password.dto';
 
 describe('Auth Controller', () => {
   let authController: AuthController;
