@@ -9,7 +9,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { Mood, MuscleGroup, SectionType } from 'src/schema/track.schema';
+import { Mood, MuscleGroup, SectionType } from '../../schema/track.schema';
 
 export class Section {
   @ApiProperty()

@@ -24,7 +24,7 @@ import {
   ApiUnsupportedMediaTypeResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { User } from 'src/decorators/user.decorator';
+import { User } from '../decorators/user.decorator'
 import { UserFavoriteDto } from './dto/user-favorite.dto';
 import { renameSync, mkdirSync, existsSync } from 'fs'
 import { uploadPath, fileFilter } from '../config/file.config';
