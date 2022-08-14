@@ -21,8 +21,8 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { User } from 'src/decorators/user.decorator';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { User } from '../decorators/user.decorator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateTrackDto } from './dto/create-tack.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { uploadPath, fileFilter } from '../config/file.config';
