@@ -85,11 +85,10 @@ describe('Auth Controller', () => {
     trackController = moduleRef.get(TrackController);
   });
   beforeEach(() => {
-    jest.spyOn(fs, 'unlinkSync')
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true)
-    jest.spyOn(fs, 'mkdirSync')
-    jest.spyOn(fs, 'renameSync')
-  })
+    jest.spyOn(fs, 'unlinkSync');
+    jest.spyOn(fs, 'mkdirSync');
+    jest.spyOn(fs, 'renameSync');
+  });
   afterEach(() => {
     jest.resetAllMocks();
   });
@@ -107,6 +106,13 @@ describe('Auth Controller', () => {
       .mockResolvedValue(mockData.public_track[0]);
     const result = await trackController.getTrackById('1', '1');
     expect(result).toEqual(mockData.public_track[0]);
+    expect(trackService.getTrackById).toHaveBeenCalled();
+  });
+  it('GET /track/:trackId should throw NotFoundException if track not found', async () => {
+    jest.spyOn(trackService, 'getTrackById').mockResolvedValue(null);
+    await expect(trackController.getTrackById('1', '1')).rejects.toThrow(
+      new NotFoundException('Track not found'),
+    );
     expect(trackService.getTrackById).toHaveBeenCalled();
   });
   it('POST /track should return generated track', async () => {
@@ -127,7 +133,7 @@ describe('Auth Controller', () => {
     expect(trackService.createTrack).toHaveBeenCalled();
   });
   it('POST /track/:trackId/image should return updated track', async () => {
-    
+    jest.spyOn(fs, 'existsSync').mockReturnValue(false);
     jest
       .spyOn(trackService, 'checkUserTrack')
       .mockResolvedValue(mockData.user_generate_track);
@@ -143,8 +149,11 @@ describe('Auth Controller', () => {
     expect(result).toEqual(mockData.public_track[0]);
     expect(trackService.checkUserTrack).toHaveBeenCalled();
     expect(trackService.updateTrackImage).toHaveBeenCalled();
+    expect(fs.mkdirSync).toHaveBeenCalled();
+    expect(fs.renameSync).toHaveBeenCalled();
   });
   it('POST /track/:trackId/image should throw NotFoundException if not found track', async () => {
+    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     jest.spyOn(trackService, 'checkUserTrack').mockResolvedValue(null);
     await expect(
       trackController.updateTrackImage(
@@ -157,6 +166,7 @@ describe('Auth Controller', () => {
     expect(trackService.checkUserTrack).toHaveBeenCalled();
   });
   it('POST /track/:trackId/image should throw InternalServerErrorException if fail to update track', async () => {
+    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     jest
       .spyOn(trackService, 'checkUserTrack')
       .mockResolvedValue(mockData.user_generate_track);

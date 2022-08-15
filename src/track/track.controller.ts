@@ -53,13 +53,9 @@ export class TrackController {
     @User() userId: string,
     @Param('trackId') trackId: string,
   ): Promise<any> {
-    try {
-      const track = await this.trackService.getTrackById(userId, trackId);
-      if (track) return track;
-      throw new NotFoundException();
-    } catch (error) {
-      throw new BadRequestException();
-    }
+    const track = await this.trackService.getTrackById(userId, trackId);
+    if (track) return track;
+    throw new NotFoundException('Track not found');
   }
 
   @Post('')
@@ -70,13 +66,13 @@ export class TrackController {
   @ApiInternalServerErrorResponse()
   async createTrack(
     @User() userId: string,
-    @Body() track: CreateTrackDto
+    @Body() track: CreateTrackDto,
   ): Promise<any> {
     try {
       const createdTrack = await this.trackService.createTrack(userId, track);
       return createdTrack;
     } catch (error) {
-      throw new BadRequestException("Fail to create Track");
+      throw new BadRequestException('Fail to create Track');
     }
   }
 
@@ -105,21 +101,23 @@ export class TrackController {
     );
     if (!existingTrack) {
       unlinkSync(programImage.path);
-      throw new NotFoundException("Track not found");
+      throw new NotFoundException('Track not found');
     }
     try {
       const updatedTrack = await this.trackService.updateTrackImage(
         trackId,
         programImage.mimetype.split('/')[1],
       );
-      const filepath = `${uploadPath}/track/${trackId}.${programImage.mimetype.split('/')[1]}`
-      if(!existsSync(`${uploadPath}/track`)) {
-        mkdirSync(`${uploadPath}/track`)
+      const filepath = `${uploadPath}/track/${trackId}.${
+        programImage.mimetype.split('/')[1]
+      }`;
+      if (!existsSync(`${uploadPath}/track`)) {
+        mkdirSync(`${uploadPath}/track`);
       }
-      renameSync(programImage.path, filepath)
+      renameSync(programImage.path, filepath);
       return updatedTrack;
     } catch (error) {
-      throw new InternalServerErrorException("Fail to update Track");
+      throw new InternalServerErrorException('Fail to update Track');
     }
   }
 }
