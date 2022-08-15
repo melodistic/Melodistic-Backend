@@ -11,11 +11,12 @@ export class TrackService {
   ) {}
 
   async getTrack(): Promise<any> {
-    return await this.prisma.track.findMany({
+    const publicTrack = await this.prisma.track.findMany({
       where: {
         is_public: true,
       },
     });
+    return publicTrack;
   }
 
   async getTrackById(userId: string, trackId: string): Promise<any> {
@@ -62,16 +63,17 @@ export class TrackService {
   }
   
   async checkUserTrack(userId: string, trackId: string): Promise<any> {
-    return await this.prisma.generatedTrack.findFirst({
+    const result = await this.prisma.generatedTrack.findFirst({
       where: {
         track_id: trackId,
         user_id: userId,
       },
     })
+    return result;
   }
 
   async updateTrackImage(trackId: string, fileExt: string): Promise<any> {
-    return await this.prisma.track.update({
+    const result = await this.prisma.track.update({
       where: {
         track_id: trackId,
       },
@@ -79,5 +81,6 @@ export class TrackService {
         track_image_url: `https://melodistic.ggolfz.me/api/track-images/${trackId}.${fileExt}`,
       },
     });
+    return result;
   }
 }
