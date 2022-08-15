@@ -16,7 +16,7 @@ export class AppController {
   @Get()
   @ApiOperation({ summary: 'healthcheck' })
   @ApiOkResponse({ type: PingResponseDto})
-  getHello() {
+  healthcheck() {
     return {
       message: 'pong',
       timestamp: new Date()

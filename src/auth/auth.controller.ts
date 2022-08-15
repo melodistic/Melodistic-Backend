@@ -51,6 +51,9 @@ export class AuthController {
       const token = await this.authService.generateToken(user);
       return { token };
     } catch (error) {
+      if(error.response) {
+        throw error;
+      }
       throw new InternalServerErrorException('Internal Server Error');
     }
   }
@@ -68,11 +71,11 @@ export class AuthController {
 
       if (existingUser) throw new BadRequestException('User already exists');
 
-      authData.password = await this.authService.hashPassword(
+      const hashPassword = await this.authService.hashPassword(
         authData.password,
       );
 
-      const user = await this.authService.signup(authData);
+      const user = await this.authService.signup({...authData, password: hashPassword});
 
       if (user === null) throw new BadRequestException('Fail to create user');
 
@@ -81,6 +84,9 @@ export class AuthController {
         token,
       };
     } catch (error) {
+      if(error.response) {
+        throw error;
+      }
       throw new InternalServerErrorException('Internal Server Error');
     }
   }
@@ -102,6 +108,9 @@ export class AuthController {
         token,
       };
     } catch (error) {
+      if(error.response) {
+        throw error;
+      }
       throw new InternalServerErrorException('Internal Server Error');
     }
   }
@@ -115,27 +124,8 @@ export class AuthController {
     @Body() resetPasswordDto: RequestResetPasswordDto,
   ) {
     try {
-      return this.authService.requestResetPassword(resetPasswordDto.email);
-    } catch (error) {
-      throw new InternalServerErrorException('Internal Server Error');
-    }
-  }
-
-  @Post('reset-password')
-  @ApiOperation({ summary: 'Reset password' })
-  @ApiOkResponse({ description: 'Password reset' })
-  @ApiBadRequestResponse({ description: 'Token is invalid' })
-  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    try {
-      const tokenValid = await this.authService.verifyResetPasswordToken(
-        resetPasswordDto,
-      );
-      if (!tokenValid) throw new BadRequestException('Token is invalid');
-      await this.authService.resetPassword(resetPasswordDto);
-      return {
-        success: true,
-      };
+      const result = await this.authService.requestResetPassword(resetPasswordDto.email);
+      return result
     } catch (error) {
       throw new InternalServerErrorException('Internal Server Error');
     }
@@ -156,6 +146,32 @@ export class AuthController {
         success: true,
       };
     } catch (error) {
+      if(error.response) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Internal Server Error');
+    }
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password' })
+  @ApiOkResponse({ description: 'Password reset' })
+  @ApiBadRequestResponse({ description: 'Token is invalid' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    try {
+      const tokenValid = await this.authService.verifyResetPasswordToken(
+        resetPasswordDto,
+      );
+      if (!tokenValid) throw new BadRequestException('Token is invalid');
+      await this.authService.resetPassword(resetPasswordDto);
+      return {
+        success: true,
+      };
+    } catch (error) {
+      if(error.response) {
+        throw error;
+      }
       throw new InternalServerErrorException('Internal Server Error');
     }
   }
@@ -183,12 +199,15 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiBadRequestResponse({ description: 'User not found' })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
-  async getMeInfo(@User() userId: string) {
+  async getMeInfo(@User() userId: string): Promise<any> {
     try {
       const user = await this.userService.findUserById(userId);
       if(!user) throw new BadRequestException('User not found');
       return user;
     } catch (error) {
+      if(error.response) {
+        throw error;
+      }
       throw new InternalServerErrorException('Internal Server Error');
     }
   }

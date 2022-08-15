@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  InternalServerErrorException,
   NotFoundException,
   Param,
   Post,
@@ -21,8 +22,8 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { User } from 'src/decorators/user.decorator';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { User } from '../decorators/user.decorator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateTrackDto } from './dto/create-tack.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { uploadPath, fileFilter } from '../config/file.config';
@@ -52,13 +53,9 @@ export class TrackController {
     @User() userId: string,
     @Param('trackId') trackId: string,
   ): Promise<any> {
-    try {
-      const track = await this.trackService.getTrackById(userId, trackId);
-      if (track) return track;
-      throw new NotFoundException();
-    } catch (error) {
-      throw new BadRequestException();
-    }
+    const track = await this.trackService.getTrackById(userId, trackId);
+    if (track) return track;
+    throw new NotFoundException('Track not found');
   }
 
   @Post('')
@@ -69,13 +66,13 @@ export class TrackController {
   @ApiInternalServerErrorResponse()
   async createTrack(
     @User() userId: string,
-    @Body() track: CreateTrackDto
+    @Body() track: CreateTrackDto,
   ): Promise<any> {
     try {
       const createdTrack = await this.trackService.createTrack(userId, track);
       return createdTrack;
     } catch (error) {
-      throw new BadRequestException();
+      throw new BadRequestException('Fail to create Track');
     }
   }
 
@@ -104,21 +101,23 @@ export class TrackController {
     );
     if (!existingTrack) {
       unlinkSync(programImage.path);
-      throw new NotFoundException();
+      throw new NotFoundException('Track not found');
     }
     try {
       const updatedTrack = await this.trackService.updateTrackImage(
         trackId,
         programImage.mimetype.split('/')[1],
       );
-      const filepath = `${uploadPath}/track/${trackId}.${programImage.mimetype.split('/')[1]}`
-      if(!existsSync(`${uploadPath}/track`)) {
-        mkdirSync(`${uploadPath}/track`)
+      const filepath = `${uploadPath}/track/${trackId}.${
+        programImage.mimetype.split('/')[1]
+      }`;
+      if (!existsSync(`${uploadPath}/track`)) {
+        mkdirSync(`${uploadPath}/track`);
       }
-      renameSync(programImage.path, filepath)
+      renameSync(programImage.path, filepath);
       return updatedTrack;
     } catch (error) {
-      throw new BadRequestException();
+      throw new InternalServerErrorException('Fail to update Track');
     }
   }
 }

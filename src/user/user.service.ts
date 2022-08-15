@@ -122,7 +122,7 @@ export class UserService {
     });
     return {
       status: 200,
-      message: 'Image uploaded',
+      message: 'Profile image updated',
     };
   }
 }

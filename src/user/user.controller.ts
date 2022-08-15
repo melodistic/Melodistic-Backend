@@ -4,27 +4,21 @@ import {
   Controller,
   Get,
   Post,
-  Query,
-  UnsupportedMediaTypeException,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import {
-  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiConsumes,
-  ApiCreatedResponse,
   ApiInternalServerErrorResponse,
-  ApiOkResponse,
-  ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
   ApiUnsupportedMediaTypeResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { User } from 'src/decorators/user.decorator';
+import { User } from '../decorators/user.decorator'
 import { UserFavoriteDto } from './dto/user-favorite.dto';
 import { renameSync, mkdirSync, existsSync } from 'fs'
 import { uploadPath, fileFilter } from '../config/file.config';
@@ -78,7 +72,8 @@ export class UserController {
           mkdirSync(`${uploadPath}/user`)
         }
         renameSync(file.path, filepath)
-        return this.userService.uploadImage(userId, filepath);
+        const result = await this.userService.uploadImage(userId, filepath);
+        return result;
       } catch (e) {
         throw new BadRequestException('Invalid image')
       }

@@ -32,7 +32,8 @@ export class AuthService {
   }
 
   async hashPassword(password: string): Promise<string> {
-    return await bcrypt.hash(password, 10);
+    const hashPassword = await bcrypt.hash(password, 10);
+    return hashPassword;
   }
 
   generateRandomToken(): string {
@@ -92,6 +93,22 @@ export class AuthService {
     }
   }
 
+  async signin(authData: AuthDto): Promise<User | null> {
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: {
+          email: authData.email,
+        },
+      });
+      if (!user) return null;
+      const isValid = await bcrypt.compare(authData.password, user.password);
+      if (!isValid) return null;
+      return user;
+    } catch (error) {
+      return null;
+    }
+  }
+
   async requestResetPassword(email: string): Promise<any> {
     const user = await this.prisma.user.findFirst({
       where: {
@@ -131,23 +148,7 @@ export class AuthService {
       },
     });
     const resetToken = await this.cacheManager.get(user.user_id);
-    return resetToken !== resetPasswordDto.token;
-  }
-
-  async signin(authData: AuthDto): Promise<User | null> {
-    try {
-      const user = await this.prisma.user.findFirst({
-        where: {
-          email: authData.email,
-        },
-      });
-      if (!user) return null;
-      const isValid = await bcrypt.compare(authData.password, user.password);
-      if (!isValid) return null;
-      return user;
-    } catch (error) {
-      return null;
-    }
+    return resetToken === resetPasswordDto.token;
   }
 
   async getVerifyEmailToken(email: string): Promise<string> {
