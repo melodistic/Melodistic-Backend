@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  InternalServerErrorException,
   NotFoundException,
   Param,
   Post,
@@ -75,7 +76,7 @@ export class TrackController {
       const createdTrack = await this.trackService.createTrack(userId, track);
       return createdTrack;
     } catch (error) {
-      throw new BadRequestException();
+      throw new BadRequestException("Fail to create Track");
     }
   }
 
@@ -104,7 +105,7 @@ export class TrackController {
     );
     if (!existingTrack) {
       unlinkSync(programImage.path);
-      throw new NotFoundException();
+      throw new NotFoundException("Track not found");
     }
     try {
       const updatedTrack = await this.trackService.updateTrackImage(
@@ -118,7 +119,7 @@ export class TrackController {
       renameSync(programImage.path, filepath)
       return updatedTrack;
     } catch (error) {
-      throw new BadRequestException();
+      throw new InternalServerErrorException("Fail to update Track");
     }
   }
 }

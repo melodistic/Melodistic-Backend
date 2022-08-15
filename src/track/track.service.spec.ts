@@ -69,7 +69,6 @@ describe('Track Service', () => {
     prismaService = moduleRef.get(PrismaService);
     httpService = moduleRef.get(HttpService);
   });
-  beforeEach(() => {});
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -79,6 +78,7 @@ describe('Track Service', () => {
       .mockResolvedValue(mockData.public_track);
     const result = await trackService.getTrack();
     expect(result).toEqual(mockData.public_track);
+    expect(prismaService.track.findMany).toHaveBeenCalled();
   });
   it('getTrackById should return track by id if track is public', async () => {
     jest
@@ -86,6 +86,7 @@ describe('Track Service', () => {
       .mockResolvedValue(mockData.public_track[0]);
     const result = await trackService.getTrackById('1', '1');
     expect(result).toEqual(mockData.public_track[0]);
+    expect(prismaService.track.findFirst).toHaveBeenCalled();
   });
   it('getTrackById should return track by id if track is private and user is owner', async () => {
     jest.spyOn(prismaService.track, 'findFirst').mockResolvedValue(null);
@@ -95,6 +96,8 @@ describe('Track Service', () => {
     });
     const result = await trackService.getTrackById('1', '1');
     expect(result).toEqual(mockData.public_track[0]);
+    expect(prismaService.track.findFirst).toHaveBeenCalled();
+    expect(prismaService.generatedTrack.findFirst).toHaveBeenCalled();
   });
   it('getTrackById should return null if track is not exist or track is private and user is not owner', async () => {
     jest.spyOn(prismaService.track, 'findFirst').mockResolvedValue(null);
@@ -103,6 +106,8 @@ describe('Track Service', () => {
       .mockResolvedValue(null);
     const result = await trackService.getTrackById('1', '1');
     expect(result).toBeNull();
+    expect(prismaService.track.findFirst).toHaveBeenCalled();
+    expect(prismaService.generatedTrack.findFirst).toHaveBeenCalled();
   });
   it('createTrack should return success with track id', async () => {
     jest.spyOn(httpService.axiosRef, 'post').mockResolvedValue({
@@ -118,20 +123,25 @@ describe('Track Service', () => {
     expect(result.status).toEqual(200);
     expect(result.message).toEqual("Track created successfully");
     expect(result.track_id).toEqual('1')
+    expect(httpService.axiosRef.post).toHaveBeenCalled();
+    expect(prismaService.generatedTrack.create).toHaveBeenCalled();
   });
   it('checkUserTrack should return track if user is owner', async () => {
     jest.spyOn(prismaService.generatedTrack, 'findFirst').mockResolvedValue(mockData.generate_track);
     const result = await trackService.checkUserTrack('1', '1');
     expect(result).toEqual(mockData.generate_track);
+    expect(prismaService.generatedTrack.findFirst).toHaveBeenCalled();
   })
   it('checkUserTrack should return null if track not found', async () => {
     jest.spyOn(prismaService.generatedTrack, 'findFirst').mockResolvedValue(null);
     const result = await trackService.checkUserTrack('1', '1');
     expect(result).toBeNull();
+    expect(prismaService.generatedTrack.findFirst).toHaveBeenCalled();
   })
   it("updateTrackImage should return track", async () => {
     jest.spyOn(prismaService.track, 'update').mockResolvedValue(mockData.public_track[0]);
     const result = await trackService.updateTrackImage('1', '.png');
     expect(result).toEqual(mockData.public_track[0]);
+    expect(prismaService.track.update).toHaveBeenCalled();
   })
 });
