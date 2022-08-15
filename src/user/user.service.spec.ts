@@ -167,7 +167,7 @@ describe('Track Service', () => {
     );
     expect(result).toBeDefined();
     expect(result.status).toEqual(200);
-    expect(result.message).toEqual('Image uploaded');
+    expect(result.message).toEqual('Profile image updated');
     expect(prismaService.user.update).toHaveBeenCalled();
   });
 });

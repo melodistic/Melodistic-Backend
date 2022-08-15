@@ -73,7 +73,7 @@ const mockData = {
   },
 };
 jest.mock('./track.service');
-describe('Auth Controller', () => {
+describe('Track Controller', () => {
   let trackController: TrackController;
   let trackService: TrackService;
   beforeAll(async () => {
