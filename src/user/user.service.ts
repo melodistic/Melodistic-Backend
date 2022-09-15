@@ -32,32 +32,12 @@ export class UserService {
   }
 
   async getUserLibrary(userId: string): Promise<any> {
-    return await this.prisma.generatedTrack.findMany({
-      select: {
-        Track: {
-          select: {
-            track_id: true,
-            track_name: true,
-            track_image_url: true,
-            track_path: true,
-            description: true,
-            duration: true,
-          },
-        },
-      },
-      where: {
-        user_id: userId,
-      },
-      orderBy: {
-        Track: {
-          created_at: 'desc',
-        },
-      },
-    });
+    const userLibraryTrack = await this.prisma.$queryRaw`SELECT * FROM get_library(${userId});`;
+    return userLibraryTrack;
   }
 
   async getUserFavorite(userId: string): Promise<any> {
-    return await this.prisma.userFavorite.findMany({
+    const userFavTrack = await this.prisma.userFavorite.findMany({
       select: {
         Track: {
           select: {
@@ -79,6 +59,7 @@ export class UserService {
         },
       },
     });
+    return this.preprocessorSerivce.preprocessUserFavoriteTrack(userFavTrack);
   }
 
   async toggleFavorite(userId: string, trackId: string): Promise<any> {
