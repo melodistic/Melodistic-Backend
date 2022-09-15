@@ -29,6 +29,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { uploadPath, fileFilter } from '../config/file.config';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { unlinkSync, renameSync, existsSync, mkdirSync } from 'fs';
+import { OptionalJwtAuthGuard } from 'src/auth/optional-jwt-auth.guard';
 
 @ApiTags('Track')
 @Controller('track')
@@ -36,8 +37,13 @@ export class TrackController {
   constructor(private trackService: TrackService) {}
 
   @Get('')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiBearerAuth()
   @ApiInternalServerErrorResponse()
-  async getTrack(): Promise<any> {
+  async getTrack(@User() userId: string): Promise<any> {
+    if(userId != null) {
+      return this.trackService.getTrackWithFavorite(userId);
+    } 
     return this.trackService.getTrack();
   }
 
