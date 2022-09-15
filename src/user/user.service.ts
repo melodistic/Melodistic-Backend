@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { PreprocessorService } from 'src/utils/preprocessor.service';
 import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private preprocessorSerivce: PreprocessorService) {}
 
   async findUserById(userId: string): Promise<any> {
     return await this.prisma.user.findFirst({

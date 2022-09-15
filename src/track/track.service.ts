@@ -1,32 +1,15 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { Track, UserFavorite } from '@prisma/client';
+import { PreprocessorService } from 'src/utils/preprocessor.service';
 import { PrismaService } from '../prisma.service';
 import { CreateTrackDto } from './dto/create-tack.dto';
-
 @Injectable()
 export class TrackService {
   constructor(
     private prisma: PrismaService,
     private httpService: HttpService,
+    private preprocessorService: PreprocessorService
   ) {}
-
-  preprocessFavoriteTrack(favoriteTrack: any): any {
-    return favoriteTrack.map(
-      (
-        track: Track & {
-          UserFavorite: UserFavorite[];
-        },
-      ) => {
-        const isFav = track.UserFavorite.length > 0;
-        delete track.UserFavorite;
-        return {
-          ...track,
-          is_favorite: isFav,
-        };
-      },
-    );
-  }
 
   async getTrack(): Promise<any> {
     const publicTrack = await this.prisma.track.findMany({
@@ -50,7 +33,7 @@ export class TrackService {
         },
       },
     });
-    const modifiedFavoriteTrack = this.preprocessFavoriteTrack(favoriteTrack);
+    const modifiedFavoriteTrack = this.preprocessorService.preprocessFavoriteTrack(favoriteTrack);
     return modifiedFavoriteTrack;
   }
 
