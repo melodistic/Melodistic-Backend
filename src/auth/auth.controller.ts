@@ -127,6 +127,9 @@ export class AuthController {
       const result = await this.authService.requestResetPassword(resetPasswordDto.email);
       return result
     } catch (error) {
+      if(error.response) {
+        throw error;
+      }
       throw new InternalServerErrorException('Internal Server Error');
     }
   }
