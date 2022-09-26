@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Post,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -20,10 +21,11 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { User } from '../decorators/user.decorator'
 import { UserFavoriteDto } from './dto/user-favorite.dto';
-import { renameSync, mkdirSync, existsSync } from 'fs'
+import { renameSync, mkdirSync, existsSync, createReadStream } from 'fs'
 import { uploadPath, fileFilter } from '../config/file.config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadImageDto } from './dto/upload-image.dto';
+import { UserDurationDto } from './dto/duration.dto';
 
 @ApiTags('User')
 @Controller('user')
@@ -55,6 +57,15 @@ export class UserController {
     @ApiInternalServerErrorResponse()
     async toggleFavorite(@User() userId: string, @Body() favorite: UserFavoriteDto): Promise<any> {
         return this.userService.toggleFavorite(userId, favorite.track_id);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('duration')
+    @ApiBearerAuth()
+    @ApiUnauthorizedResponse({ description: 'User is not logged in' })
+    @ApiInternalServerErrorResponse()
+    async updateExerciseDuration(@User() userId: string, @Body() body: UserDurationDto): Promise<any> {
+      return this.userService.updateExerciseDuration(userId, body);
     }
 
     @UseGuards(JwtAuthGuard)
