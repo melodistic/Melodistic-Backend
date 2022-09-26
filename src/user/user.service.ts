@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PreprocessorService } from 'src/utils/preprocessor.service';
 import { PrismaService } from '../prisma.service';
+import { UserDurationDto } from './dto/duration.dto';
 
 @Injectable()
 export class UserService {
@@ -91,6 +92,22 @@ export class UserService {
         message: 'Track added to favorite',
       };
     }
+  }
+
+  async updateExerciseDuration(userId: string, duration: UserDurationDto): Promise<any> {
+    await this.prisma.user.update({
+      where: {
+        user_id: userId,
+      },
+      data: {
+        exercise_duration_hour: duration.duration_hour,
+        exercise_duration_minute: duration.duration_minute,
+      },
+    });
+    return {
+      status: 200,
+      message: 'Exercise duration updated',
+    };
   }
 
   async uploadImage(userId: string, image: string): Promise<any> {
