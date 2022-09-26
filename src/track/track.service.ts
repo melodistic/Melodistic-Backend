@@ -96,7 +96,7 @@ export class TrackService {
         track_id: trackId,
       },
       data: {
-        track_image_url: `https://melodistic.ggolfz.me/api/track-images/${trackId}.${fileExt}`,
+        track_image_url: `https://melodistic.me/api/storage/track/${trackId}.${fileExt}`,
       },
     });
     return result;
