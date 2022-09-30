@@ -19,10 +19,10 @@ export class EmailTemplate {
                 <td style="font-weight: bold;">Melodistic</td></tr>
             <tr><td style="font-size: 14px;">To reset your password, please use the following One Time Password (OTP):</td></tr>
             <tr>
-                <td style="background: black;color: white;padding: 44px 0; margin: 24px 0; display: flex; flex-direction:column; align-items:center;">
-                    <div style="font-weight: 600;">One Time password (OTP):</div>
-                    <div style="font-size:28px; font-weight: bold; color: #FA8B44;">${token}</div>
-                    <div style="font-size: 14px;">(This OTP is valid for only 5 minutes)</div>
+                <td style="background: black;color: white;padding: 44px 0; margin: 24px 0;">
+                    <div style="font-weight: 600; text-align: center;">One Time password (OTP):</div>
+                    <div style="font-size:28px; font-weight: bold; color: #FA8B44; text-align: center;">${token}</div>
+                    <div style="font-size: 14px; text-align: center;">(This OTP is valid for only 5 minutes)</div>
                 </td>
             </tr>
             <tr><td style="font-size: 14px;">Thank you for using Melodistic</td></tr>
