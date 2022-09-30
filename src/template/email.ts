@@ -1,4 +1,8 @@
-const renderOTPVerifyEmailTemplate = (token) => (
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class EmailTemplate {
+  renderOTPVerifyEmailTemplate = (token: string): string =>
     `<!DOCTYPE html>
     <html lang="en">
     <head>
@@ -24,9 +28,5 @@ const renderOTPVerifyEmailTemplate = (token) => (
             <tr><td style="font-size: 14px;">Thank you for using Melodistic</td></tr>
         </table>
     </body>
-    </html>`
-)
-
-module.exports = {
-    renderOTPVerifyEmailTemplate
+    </html>`;
 }
