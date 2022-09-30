@@ -9,6 +9,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import * as redisStore from 'cache-manager-redis-store';
 import { MailService } from '../utils/mail.service';
+import { EmailTemplate } from 'src/template/email';
 
 @Module({
   imports: [
@@ -34,6 +35,6 @@ import { MailService } from '../utils/mail.service';
     })
   ],
   controllers: [AuthController],
-  providers: [AuthService, PrismaService, JwtStrategy, MailService],
+  providers: [AuthService, PrismaService, JwtStrategy, MailService, EmailTemplate],
 })
 export class AuthModule {}
