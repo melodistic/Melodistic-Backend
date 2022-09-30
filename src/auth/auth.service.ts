@@ -17,6 +17,8 @@ import {
   VerifyResetPasswordDto,
 } from './dto/reset-password.dto';
 import { MailService } from '../utils/mail.service';
+import { renderOTPVerifyEmailTemplate } from '../template/email.js';
+
 @Injectable()
 export class AuthService {
   private oauthClient: Auth.OAuth2Client;
@@ -118,7 +120,7 @@ export class AuthService {
     if (!user) throw new BadRequestException('Email not found');
     const token = this.generateResetPasswordToken();
     await this.cacheManager.set(user.user_id, token, { ttl: 300 });
-    await this.mailService.sendEmail(email,"Here is your reset password token",`Token: ${token}`);
+    await this.mailService.sendEmail(email, "OTP Verify Password", renderOTPVerifyEmailTemplate(token));
     return { email, token };
   }
 
