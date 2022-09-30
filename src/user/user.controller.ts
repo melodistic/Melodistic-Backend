@@ -78,12 +78,13 @@ export class UserController {
     @ApiUnsupportedMediaTypeResponse()
     async uploadProfileImage(@User() userId: string, @Body() body: UploadImageDto, @UploadedFile() file: Express.Multer.File): Promise<any> {
       try {
-        const filepath = `${uploadPath}/user/${userId}.${file.mimetype.split('/')[1]}`
+        const filename = `${userId}.${file.mimetype.split('/')[1]}`;
+        const filepath = `${uploadPath}/user/${filename}`
         if(!existsSync(`${uploadPath}/user`)) {
           mkdirSync(`${uploadPath}/user`)
         }
         renameSync(file.path, filepath)
-        const result = await this.userService.uploadImage(userId, filepath);
+        const result = await this.userService.uploadImage(userId, `https://melodistic.me/api/storage/user-profile/${filename}`);
         return result;
       } catch (e) {
         throw new BadRequestException('Invalid image')

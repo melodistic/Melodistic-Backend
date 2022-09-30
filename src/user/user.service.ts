@@ -16,6 +16,8 @@ export class UserService {
         user_id: true,
         email: true,
         user_profile_image: true,
+        exercise_duration_hour: true,
+        exercise_duration_minute: true
       },
     });
   }
