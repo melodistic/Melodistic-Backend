@@ -17,7 +17,7 @@ import {
   VerifyResetPasswordDto,
 } from './dto/reset-password.dto';
 import { MailService } from '../utils/mail.service';
-import { renderOTPVerifyEmailTemplate } from '../template/email.js';
+import { EmailTemplate } from '../template/email';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +27,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private mailService: MailService,
+    private emailTemplate: EmailTemplate,
   ) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -120,7 +121,7 @@ export class AuthService {
     if (!user) throw new BadRequestException('Email not found');
     const token = this.generateResetPasswordToken();
     await this.cacheManager.set(user.user_id, token, { ttl: 300 });
-    await this.mailService.sendEmail(email, "OTP Verify Password", renderOTPVerifyEmailTemplate(token));
+    await this.mailService.sendEmail(email, "OTP Verify Password", this.emailTemplate.renderOTPVerifyEmailTemplate(token));
     return { email, token };
   }
 
