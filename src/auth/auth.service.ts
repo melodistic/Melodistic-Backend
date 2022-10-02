@@ -88,7 +88,7 @@ export class AuthService {
         },
       });
       const API_ENDPOINT = process.env.API_ENDPOINT || 'http://localhost:3000';
-      await this.mailService.sendEmail(authData.email, "Please verify your email",`<a href="${API_ENDPOINT}/api/auth/verify?token=${token}">Verify Email</a>`);
+      await this.mailService.sendEmail(authData.email, "Please verify your email",this.emailTemplate.renderVerifyEmailTemplate(authData.email,`${API_ENDPOINT}/api/auth/verify?token=${token}`));
 
       return user;
     } catch (error) {
