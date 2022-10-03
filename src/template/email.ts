@@ -52,9 +52,9 @@ export class EmailTemplate {
           <td>
             <div style="max-width: 440px; margin: 0 auto">
               <div
-                style="font-size: 28px; font-weight: bold; margin-bottom: 16px"
+                style="font-size: 28px; font-weight: bold; margin-bottom: 16px;"
               >
-                Hi ${email},
+                Hi <a href="mailto:${email}" target="_blank" style="color: black; text-decoration: none;">${email}</a>,
               </div>
               <div>
                 Thanks for creating a Melodistic Account. Please verify your email
@@ -72,6 +72,7 @@ export class EmailTemplate {
                       color: white;
                       border-radius: 4px;
                       cursor: pointer;
+                      text-align: center;
                     "
                   >
                     Verify Email Address
