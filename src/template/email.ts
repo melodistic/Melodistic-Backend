@@ -16,12 +16,12 @@ export class EmailTemplate {
     <body>
         <table style="width: 100%;font-family: 'Poppins', sans-serif;font-size:16px;">
             <tr>
-                <td style="font-weight: bold;">Melodistic</td></tr>
-            <tr><td style="font-size: 14px;">To reset your password, please use the following One Time Password (OTP):</td></tr>
+                <td style="font-weight: bold; color: black;">Melodistic</td></tr>
+            <tr><td style="font-size: 14px; color: black;">To reset your password, please use the following One Time Password (OTP):</td></tr>
             <tr>
                 <td style="background: black;color: white;padding: 44px 0; margin: 24px 0;">
-                    <div style="font-weight: 600; text-align: center;">One Time password (OTP):</div>
-                    <div style="font-size:28px; font-weight: bold; color: #FA8B44; text-align: center;">${token}</div>
+                    <div style="font-weight: 600; text-align: center; color: black;">One Time password (OTP):</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #FA8B44; text-align: center;">${token}</div>
                     <div style="font-size: 14px; text-align: center; color: white;">(This OTP is valid for only 5 minutes)</div>
                 </td>
             </tr>
@@ -52,11 +52,11 @@ export class EmailTemplate {
           <td>
             <div style="max-width: 440px; margin: 0 auto">
               <div
-                style="font-size: 28px; font-weight: bold; margin-bottom: 16px;"
+                style="font-size: 28px; font-weight: bold; margin-bottom: 16px; color: black;"
               >
                 Hi <a href="mailto:${email}" target="_blank" style="color: black; text-decoration: none;">${email}</a>,
               </div>
-              <div>
+              <div style="color: black;">
                 Thanks for creating a Melodistic Account. Please verify your email
                 address by clicking the button below.
               </div>
@@ -79,7 +79,7 @@ export class EmailTemplate {
                   </div></a
                 >
               </div>
-              <div>Thank you for using Melodistic</div>
+              <div style="color: black;">Thank you for using Melodistic</div>
             </div>
           </td>
         </tr>
