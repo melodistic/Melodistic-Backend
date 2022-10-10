@@ -43,6 +43,7 @@ model ProcessedMusic {
   bpm                   Decimal?                @db.Decimal
   created_at            DateTime?               @default(now()) @db.Timestamp(6)
   updated_at            DateTime?               @default(now()) @db.Timestamp(6)
+  is_processing         Boolean?                @default(true)
   User                  User?                   @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "processedmusic_user_user_id_fk")
   ProcessedMusicExtract ProcessedMusicExtract[]
 }

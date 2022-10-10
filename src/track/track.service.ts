@@ -80,11 +80,26 @@ export class TrackService {
     };
   }
 
+  async checkExistTrack(trackId: string): Promise<boolean> {
+    const result = await this.prisma.track.findFirst({
+      where: {
+        track_id: trackId,
+      },
+    });
+    return !!result;
+  }
+
   async checkUserTrack(userId: string, trackId: string): Promise<any> {
     const result = await this.prisma.generatedTrack.findFirst({
       where: {
-        track_id: trackId,
-        user_id: userId,
+        AND: [
+          {
+            track_id: trackId,
+          },
+          {
+            user_id: userId,
+          }
+        ]
       },
     });
     return result;
@@ -100,5 +115,28 @@ export class TrackService {
       },
     });
     return result;
+  }
+  
+  async deleteGeneratedTrack(userId: string, trackId: string): Promise<void> {
+    await this.prisma.generatedTrack.deleteMany({
+      where: {
+        AND: [
+          {
+            track_id: trackId,
+          },
+          {
+            user_id: userId,
+          }
+        ]
+      },
+    });
+  }
+  
+  async deleteTrack(trackId: string): Promise<void> {
+    await this.prisma.track.delete({
+      where: {
+        track_id: trackId,
+      },
+    });
   }
 }

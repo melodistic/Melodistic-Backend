@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   InternalServerErrorException,
   NotFoundException,
@@ -41,9 +42,9 @@ export class TrackController {
   @ApiBearerAuth()
   @ApiInternalServerErrorResponse()
   async getTrack(@User() userId: string): Promise<any> {
-    if(userId != null) {
+    if (userId != null) {
       return this.trackService.getTrackWithFavorite(userId);
-    } 
+    }
     return this.trackService.getTrack();
   }
 
@@ -124,6 +125,30 @@ export class TrackController {
       return updatedTrack;
     } catch (error) {
       throw new InternalServerErrorException('Fail to update Track');
+    }
+  }
+
+  @Delete(':trackId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({ description: 'User is not logged in' })
+  @ApiNotFoundResponse()
+  @ApiBadRequestResponse()
+  @ApiInternalServerErrorResponse()
+  async deleteTrack(
+    @User() userId: string,
+    @Param('trackId') trackId: string,
+  ): Promise<any> {
+    const existsTrack = await this.trackService.checkExistTrack(trackId);
+    if (!existsTrack) throw new NotFoundException('Track not found');
+    const track = await this.trackService.checkUserTrack(userId, trackId);
+    if (!track) throw new NotFoundException('Track not found');
+    try {
+      await this.trackService.deleteGeneratedTrack(userId, trackId);
+      await this.trackService.deleteTrack(trackId);
+      return { status: 200, message: 'Track deleted' };
+    } catch (error) {
+      throw new BadRequestException('Fail to delete Track');
     }
   }
 }
