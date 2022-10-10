@@ -8,7 +8,7 @@ export class TrackService {
   constructor(
     private prisma: PrismaService,
     private httpService: HttpService,
-    private preprocessorService: PreprocessorService
+    private preprocessorService: PreprocessorService,
   ) {}
 
   async getTrack(): Promise<any> {
@@ -33,7 +33,8 @@ export class TrackService {
         },
       },
     });
-    const modifiedFavoriteTrack = this.preprocessorService.preprocessFavoriteTrack(favoriteTrack);
+    const modifiedFavoriteTrack =
+      this.preprocessorService.preprocessFavoriteTrack(favoriteTrack);
     return modifiedFavoriteTrack;
   }
 
@@ -98,8 +99,8 @@ export class TrackService {
           },
           {
             user_id: userId,
-          }
-        ]
+          },
+        ],
       },
     });
     return result;
@@ -116,7 +117,7 @@ export class TrackService {
     });
     return result;
   }
-  
+
   async deleteGeneratedTrack(userId: string, trackId: string): Promise<void> {
     await this.prisma.generatedTrack.deleteMany({
       where: {
@@ -126,12 +127,27 @@ export class TrackService {
           },
           {
             user_id: userId,
-          }
-        ]
+          },
+        ],
       },
     });
   }
-  
+
+  async deleteFavoriteTrack(userId: string, trackId: string): Promise<void> {
+    await this.prisma.userFavorite.deleteMany({
+      where: {
+        AND: [
+          {
+            track_id: trackId,
+          },
+          {
+            user_id: userId,
+          },
+        ],
+      },
+    });
+  }
+
   async deleteTrack(trackId: string): Promise<void> {
     await this.prisma.track.delete({
       where: {

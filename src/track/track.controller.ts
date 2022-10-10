@@ -146,6 +146,7 @@ export class TrackController {
     if (!track) throw new NotFoundException('Track not found');
     try {
       await this.trackService.deleteGeneratedTrack(userId, trackId);
+      await this.trackService.deleteFavoriteTrack(userId, trackId);
       await this.trackService.deleteTrack(trackId);
       return { status: 200, message: 'Track deleted' };
     } catch (error) {
