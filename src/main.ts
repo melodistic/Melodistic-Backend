@@ -10,7 +10,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api')
 	app.enableCors({
 		allowedHeaders: ['Authorization', 'Content-Type'],
-		methods: ['GET', 'POST'],
+		methods: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH'],
 		origin: ['localhost'],
 	})
   app.use(helmet())

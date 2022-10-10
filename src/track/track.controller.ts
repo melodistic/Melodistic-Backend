@@ -130,6 +130,7 @@ export class TrackController {
 
   @Delete(':trackId')
   @UseGuards(JwtAuthGuard)
+  @ApiParam({ name: 'trackId' })
   @ApiBearerAuth()
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiNotFoundResponse()
