@@ -50,6 +50,7 @@ export class UserService {
             track_path: true,
             description: true,
             duration: true,
+            is_public: true
           },
         },
       },
