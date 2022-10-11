@@ -22,7 +22,7 @@ export class ProcessService {
     const video_id = youtubeUrl.includes('v=')
       ? youtubeUrl.split('v=')[1]
       : youtubeUrl.split('be/')[1];
-    await this.httpService.axiosRef.post(
+    this.httpService.axiosRef.post(
       'https://melodistic.me/api/processor/youtube',
       {
         user_id: userId,
@@ -35,7 +35,7 @@ export class ProcessService {
     file_name: string,
     file_path: string,
   ): Promise<any> {
-    await this.httpService.axiosRef.post(
+    this.httpService.axiosRef.post(
       'https://melodistic.me/api/processor/file',
       {
         user_id: userId,

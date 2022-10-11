@@ -38,7 +38,11 @@ export class ProcessController {
     @User() userId: string,
     @Body() data: YoutubeDto,
   ): Promise<any> {
-    return this.processService.processMusicFromYoutube(userId, data.url);
+    this.processService.processMusicFromYoutube(userId, data.url);
+    return {
+        statusCode: 200,
+        message: 'Processing started'
+    }
   }
 
   @Post('/file')
@@ -48,6 +52,10 @@ export class ProcessController {
   async processMusicFromFile(@User() userId: string): Promise<any> {
     // Add File Upload here
     // return this.processService.processMusicFromFile(userId, data.url);
+    return {
+        statusCode: 200,
+        message: 'Processing started'
+    }
   }
 
   @Delete('/:processId')

@@ -1,8 +1,10 @@
-import { CacheModule, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
+import { ProcessModule } from './process/process.module';
 import { TrackModule } from './track/track.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -10,7 +12,9 @@ import { TrackModule } from './track/track.module';
       isGlobal: true,
     }),
     AuthModule,
-    TrackModule
+    TrackModule,
+    UserModule,
+    ProcessModule
   ],
   controllers: [AppController],
   providers: [],

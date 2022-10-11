@@ -13,4 +13,4 @@ import { ProcessService } from './process.service'
 	controllers: [ProcessController],
 	exports: [ProcessService],
 })
-export class TrackModule {}
+export class ProcessModule {}

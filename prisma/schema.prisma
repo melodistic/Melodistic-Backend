@@ -37,7 +37,6 @@ model ProcessedMusic {
   process_id            String                  @id(map: "processedmusic_pk") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   user_id               String?                 @db.Uuid
   music_name            String?                 @db.VarChar(255)
-  artist_name           String?                 @db.VarChar(255)
   duration              Int?
   mood                  String?                 @db.VarChar(10)
   bpm                   Decimal?                @db.Decimal
