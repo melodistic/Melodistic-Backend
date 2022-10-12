@@ -17,7 +17,8 @@ export class UserService {
         email: true,
         user_profile_image: true,
         exercise_duration_hour: true,
-        exercise_duration_minute: true
+        exercise_duration_minute: true,
+        email_verified
       },
     });
   }
