@@ -5,15 +5,22 @@ import {
   Get,
   Param,
   Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
+  ApiConsumes,
   ApiInternalServerErrorResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { renameSync } from 'fs';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { uploadPath, musicFileFilter } from 'src/config/file.config';
 import { User } from 'src/decorators/user.decorator';
+import { FileDto } from './dto/file.dto';
 import { YoutubeDto } from './dto/youtube.dto';
 import { ProcessService } from './process.service';
 
@@ -40,22 +47,38 @@ export class ProcessController {
   ): Promise<any> {
     this.processService.processMusicFromYoutube(userId, data.url);
     return {
-        statusCode: 200,
-        message: 'Processing started'
-    }
+      statusCode: 200,
+      message: 'Processing started',
+    };
   }
 
   @Post('/file')
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('music', {
+      dest: uploadPath,
+      fileFilter: musicFileFilter,
+      limits: { fileSize: 1 << 24 },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
   @ApiBearerAuth()
   @ApiInternalServerErrorResponse()
-  async processMusicFromFile(@User() userId: string): Promise<any> {
-    // Add File Upload here
-    // return this.processService.processMusicFromFile(userId, data.url);
+  async processMusicFromFile(
+    @User() userId: string,
+    @Body() body: FileDto,
+    @UploadedFile() music: Express.Multer.File,
+  ): Promise<any> {
+    const filename = music.originalname.split('.')[0];
+    const fileExtension = music.originalname.split('.')[1];
+    const newFilename = `${filename}-${Date.now()}.${fileExtension}`;
+    const filePath = `${uploadPath}/${newFilename}`;
+    renameSync(music.path, filePath);
+    this.processService.processMusicFromFile(userId, filename, filePath);
     return {
-        statusCode: 200,
-        message: 'Processing started'
-    }
+      statusCode: 200,
+      message: 'Processing started',
+    };
   }
 
   @Delete('/:processId')
