@@ -8,7 +8,8 @@ export const fileFilter: MulterOptions['fileFilter'] = (_, file, cb) => {
 }
 
 export const musicFileFilter: MulterOptions['fileFilter'] = (_, file, cb) => {
-	if(file.mimetype === 'audio/wav') 
+	console.log(file)
+	if(file.mimetype === 'audio/wav' || file.mimetype === 'audio/wave') 
 		return cb(null, true)
 	cb(new UnsupportedMediaTypeException('Only wav audio files are allowed'), false)
 }
