@@ -74,7 +74,10 @@ export class ProcessController {
     const newFilename = `${filename}-${Date.now()}.${fileExtension}`;
     const filePath = `${uploadPath}/${newFilename}`;
     renameSync(music.path, filePath);
-    this.processService.processMusicFromFile(userId, filename, filePath);
+    await this.processService.processMusicFromFile(userId, filename, filePath);
+    console.log(filename)
+    console.log(filePath)
+    console.log(userId)
     return {
       statusCode: 200,
       message: 'Processing started',
