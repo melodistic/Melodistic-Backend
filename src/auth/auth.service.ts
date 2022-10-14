@@ -18,6 +18,7 @@ import {
 } from './dto/reset-password.dto';
 import { MailService } from '../utils/mail.service';
 import { EmailTemplate } from '../template/email';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -107,6 +108,30 @@ export class AuthService {
       return user;
     } catch (error) {
       return null;
+    }
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<any> {
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: {
+          user_id: userId,
+        }
+      });
+      if (!user) throw new BadRequestException('User not found');
+      const isValid = await bcrypt.compare(changePasswordDto.recentPassword, user.password);
+      if (!isValid) throw new BadRequestException('Old password is not correct');
+      const newPassword = await this.hashPassword(changePasswordDto.newPassword);
+      await this.prisma.user.update({
+        data: {
+          password: newPassword,
+        },
+        where: {
+          user_id: userId,
+        },
+      });
+    } catch (error) {
+      throw error;
     }
   }
 

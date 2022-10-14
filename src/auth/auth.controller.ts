@@ -31,6 +31,7 @@ import {
   VerifyResetPasswordDto,
 } from './dto/reset-password.dto';
 import { OptionalJwtAuthGuard } from './optional-jwt-auth.guard';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -111,6 +112,27 @@ export class AuthController {
       return {
         token,
       };
+    } catch (error) {
+      if (error.response) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Internal Server Error');
+    }
+  }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Change Password'})
+  @ApiOkResponse({ description: 'Change password successful' })
+  @ApiBadRequestResponse({ description: 'Fail to change password' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  @ApiBearerAuth()
+  async changePassword(@User() userId: string, @Body() changePasswordDto: ChangePasswordDto) {
+    try {
+      await this.authService.changePassword(userId, changePasswordDto);
+      return {
+        success: true,
+      }
     } catch (error) {
       if (error.response) {
         throw error;
