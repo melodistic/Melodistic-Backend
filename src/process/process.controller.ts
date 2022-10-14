@@ -45,7 +45,7 @@ export class ProcessController {
     @User() userId: string,
     @Body() data: YoutubeDto,
   ): Promise<any> {
-    this.processService.processMusicFromYoutube(userId, data.url);
+    await this.processService.processMusicFromYoutube(userId, data.url);
     return {
       statusCode: 200,
       message: 'Processing started',
@@ -74,7 +74,7 @@ export class ProcessController {
     const newFilename = `${filename}-${Date.now()}.${fileExtension}`;
     const filePath = `${uploadPath}/${newFilename}`;
     renameSync(music.path, filePath);
-    this.processService.processMusicFromFile(userId, filename, filePath);
+    await this.processService.processMusicFromFile(userId, filename, filePath);
     return {
       statusCode: 200,
       message: 'Processing started',
