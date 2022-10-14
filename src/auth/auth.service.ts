@@ -87,9 +87,7 @@ export class AuthService {
           email_verification_token_expiry: new Date(Date.now() + 3600000),
         },
       });
-      const API_ENDPOINT = process.env.API_ENDPOINT || 'http://localhost:3000';
-      await this.mailService.sendEmail(authData.email, "Please verify your email",this.emailTemplate.renderVerifyEmailTemplate(authData.email,`${API_ENDPOINT}/api/auth/verify?token=${token}`));
-
+      await this.sendVerifyEmail(authData.email, token);
       return user;
     } catch (error) {
       return null;
@@ -112,6 +110,45 @@ export class AuthService {
     }
   }
 
+  async sendVerifyEmail(email: string, token: string): Promise<any> {
+    const API_ENDPOINT = process.env.API_ENDPOINT || 'http://localhost:3000';
+    await this.mailService.sendEmail(
+      email,
+      'Please verify your email',
+      this.emailTemplate.renderVerifyEmailTemplate(
+        email,
+        `${API_ENDPOINT}/api/auth/verify?token=${token}`,
+      ),
+    );
+  }
+
+  async resendVerifyEmail(userId: string): Promise<any> {
+    try {
+      const token = this.generateRandomToken();
+      const user = await this.prisma.user.findFirst({
+        where: {
+          user_id: userId,
+        }
+      });
+      if (!user) throw new BadRequestException('User not found');
+      if(user.email_verified) {
+        throw new BadRequestException('Email already verified');
+      }
+      await this.prisma.user.update({
+        data: {
+          email_verification_token: token,
+          email_verification_token_expiry: new Date(Date.now() + 3600000),
+        },
+        where: {
+          user_id: userId,
+        },
+      });
+      await this.sendVerifyEmail(user.email, token);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async requestResetPassword(email: string): Promise<any> {
     const user = await this.prisma.user.findFirst({
       where: {
@@ -121,7 +158,11 @@ export class AuthService {
     if (!user) throw new BadRequestException('Email not found');
     const token = this.generateResetPasswordToken();
     await this.cacheManager.set(user.user_id, token, { ttl: 300 });
-    await this.mailService.sendEmail(email, "OTP Verify Password", this.emailTemplate.renderOTPVerifyEmailTemplate(token));
+    await this.mailService.sendEmail(
+      email,
+      'OTP Verify Password',
+      this.emailTemplate.renderOTPVerifyEmailTemplate(token),
+    );
     return { email, token };
   }
 

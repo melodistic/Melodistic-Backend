@@ -30,6 +30,7 @@ import {
   ResetPasswordDto,
   VerifyResetPasswordDto,
 } from './dto/reset-password.dto';
+import { OptionalJwtAuthGuard } from './optional-jwt-auth.guard';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -51,7 +52,7 @@ export class AuthController {
       const token = await this.authService.generateToken(user);
       return { token };
     } catch (error) {
-      if(error.response) {
+      if (error.response) {
         throw error;
       }
       throw new InternalServerErrorException('Internal Server Error');
@@ -75,7 +76,10 @@ export class AuthController {
         authData.password,
       );
 
-      const user = await this.authService.signup({...authData, password: hashPassword});
+      const user = await this.authService.signup({
+        ...authData,
+        password: hashPassword,
+      });
 
       if (user === null) throw new BadRequestException('Fail to create user');
 
@@ -84,7 +88,7 @@ export class AuthController {
         token,
       };
     } catch (error) {
-      if(error.response) {
+      if (error.response) {
         throw error;
       }
       throw new InternalServerErrorException('Internal Server Error');
@@ -108,7 +112,33 @@ export class AuthController {
         token,
       };
     } catch (error) {
-      if(error.response) {
+      if (error.response) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Internal Server Error');
+    }
+  }
+
+  @Post('resent-verify-email')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Resent verify email' })
+  @ApiOkResponse({ description: 'Email sent' })
+  @ApiBadRequestResponse({ description: 'Email is not valid' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  async resendVerifyEmail(
+    @User() userId: string,
+    @Query('userId') userIdQuery: string,
+  ): Promise<any> {
+    try {
+      await this.authService.resendVerifyEmail(
+        userId ?? userIdQuery,
+      );
+      return {
+        success: true,
+      };
+    } catch (error) {
+      if (error.response) {
         throw error;
       }
       throw new InternalServerErrorException('Internal Server Error');
@@ -124,10 +154,12 @@ export class AuthController {
     @Body() resetPasswordDto: RequestResetPasswordDto,
   ) {
     try {
-      const result = await this.authService.requestResetPassword(resetPasswordDto.email);
-      return result
+      const result = await this.authService.requestResetPassword(
+        resetPasswordDto.email,
+      );
+      return result;
     } catch (error) {
-      if(error.response) {
+      if (error.response) {
         throw error;
       }
       throw new InternalServerErrorException('Internal Server Error');
@@ -143,13 +175,15 @@ export class AuthController {
     @Body() resetPasswordDto: VerifyResetPasswordDto,
   ) {
     try {
-      const tokenValid = await this.authService.verifyResetPasswordToken(resetPasswordDto);
-      if(!tokenValid) throw new BadRequestException('Token is invalid');
+      const tokenValid = await this.authService.verifyResetPasswordToken(
+        resetPasswordDto,
+      );
+      if (!tokenValid) throw new BadRequestException('Token is invalid');
       return {
         success: true,
       };
     } catch (error) {
-      if(error.response) {
+      if (error.response) {
         throw error;
       }
       throw new InternalServerErrorException('Internal Server Error');
@@ -172,7 +206,7 @@ export class AuthController {
         success: true,
       };
     } catch (error) {
-      if(error.response) {
+      if (error.response) {
         throw error;
       }
       throw new InternalServerErrorException('Internal Server Error');
@@ -191,6 +225,9 @@ export class AuthController {
         success: true,
       };
     } catch (error) {
+      if (error.response) {
+        throw error;
+      }
       throw new InternalServerErrorException('Internal Server Error');
     }
   }
@@ -205,10 +242,10 @@ export class AuthController {
   async getMeInfo(@User() userId: string): Promise<any> {
     try {
       const user = await this.userService.findUserById(userId);
-      if(!user) throw new BadRequestException('User not found');
+      if (!user) throw new BadRequestException('User not found');
       return user;
     } catch (error) {
-      if(error.response) {
+      if (error.response) {
         throw error;
       }
       throw new InternalServerErrorException('Internal Server Error');
