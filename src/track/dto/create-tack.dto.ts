@@ -31,6 +31,10 @@ export class Section {
   @IsInt()
   @IsNotEmpty()
   duration: number;
+
+  @ApiProperty()
+  @IsArray()
+  music_ids: [string];
 }
 
 export class CreateTrackDto {
