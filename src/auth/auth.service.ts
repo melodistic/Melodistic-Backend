@@ -230,7 +230,7 @@ export class AuthService {
     return user.email_verification_token;
   }
 
-  async verifyEmail(token: string): Promise<boolean> {
+  async verifyEmail(token: string): Promise<any> {
     try {
       const existingUser = await this.prisma.user.findFirst({
         where: {
@@ -242,7 +242,7 @@ export class AuthService {
         throw new BadRequestException('Email is already verified');
       if (existingUser.email_verification_token_expiry < new Date())
         throw new BadRequestException('Token has expired');
-      await this.prisma.user.update({
+      const result = await this.prisma.user.update({
         data: {
           email_verified: true,
           email_verification_token: null,
@@ -252,7 +252,7 @@ export class AuthService {
           email_verification_token: token,
         },
       });
-      return true;
+      return result;
     } catch (error) {
       throw error;
     }

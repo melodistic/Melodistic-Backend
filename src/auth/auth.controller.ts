@@ -32,6 +32,7 @@ import {
 } from './dto/reset-password.dto';
 import { OptionalJwtAuthGuard } from './optional-jwt-auth.guard';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { WebsiteTemplate, VerifyStatus } from 'src/template/website';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -39,6 +40,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UserService,
+    private readonly websiteTemplate: WebsiteTemplate,
   ) {}
 
   @Post('google')
@@ -122,17 +124,20 @@ export class AuthController {
 
   @Post('change-password')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Change Password'})
+  @ApiOperation({ summary: 'Change Password' })
   @ApiOkResponse({ description: 'Change password successful' })
   @ApiBadRequestResponse({ description: 'Fail to change password' })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   @ApiBearerAuth()
-  async changePassword(@User() userId: string, @Body() changePasswordDto: ChangePasswordDto) {
+  async changePassword(
+    @User() userId: string,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
     try {
       await this.authService.changePassword(userId, changePasswordDto);
       return {
         success: true,
-      }
+      };
     } catch (error) {
       if (error.response) {
         throw error;
@@ -153,9 +158,7 @@ export class AuthController {
     @Query('userId') userIdQuery: string,
   ): Promise<any> {
     try {
-      await this.authService.resendVerifyEmail(
-        userId ?? userIdQuery,
-      );
+      await this.authService.resendVerifyEmail(userId ?? userIdQuery);
       return {
         success: true,
       };
@@ -242,13 +245,29 @@ export class AuthController {
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async verifyEmail(@Query('token') token: string): Promise<any> {
     try {
-      await this.authService.verifyEmail(token);
-      return {
-        success: true,
-      };
+      const result = await this.authService.verifyEmail(token);
+      return this.websiteTemplate.renderVerificationResultTemplate(
+        VerifyStatus.VERIFY_SUCCESS,
+        result.email,
+      );
     } catch (error) {
       if (error.response) {
-        throw error;
+        switch (error.response.message) {
+          case 'Token is invalid':
+            return this.websiteTemplate.renderVerificationResultTemplate(
+              VerifyStatus.TOKEN_INVALID,
+            );
+          case 'Email is already verified':
+            return this.websiteTemplate.renderVerificationResultTemplate(
+              VerifyStatus.ALREADY_VERIFIED,
+            );
+          case 'Token has expired':
+            return this.websiteTemplate.renderVerificationResultTemplate(
+              VerifyStatus.TOKEN_EXPIRED,
+            );
+          default:
+            throw error;
+        }
       }
       throw new InternalServerErrorException('Internal Server Error');
     }

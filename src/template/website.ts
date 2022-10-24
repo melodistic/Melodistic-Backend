@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-enum VerifyStatus {
+export enum VerifyStatus {
   VERIFY_SUCCESS = 'VERIFY_SUCCESS',
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
   TOKEN_INVALID = 'TOKEN_INVALID',
@@ -24,7 +24,7 @@ export class WebsiteTemplate {
 
   renderVerificationResultTemplate = (
     mode: VerifyStatus,
-    email: string,
+    email?: string,
   ): string => `
   <!DOCTYPE html>
   <html lang="en">
