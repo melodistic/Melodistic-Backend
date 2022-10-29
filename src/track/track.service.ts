@@ -16,6 +16,9 @@ export class TrackService {
       where: {
         is_public: true,
       },
+      orderBy: {
+        updated_at: 'desc',
+      }
     });
     return publicTrack;
   }
@@ -32,6 +35,9 @@ export class TrackService {
           },
         },
       },
+      orderBy: {
+        updated_at: 'desc',
+      }
     });
     const modifiedFavoriteTrack =
       this.preprocessorService.preprocessFavoriteTrack(favoriteTrack);

@@ -13,6 +13,9 @@ export class ProcessService {
       where: {
         user_id: userId,
       },
+      orderBy: {
+        updated_at: 'desc',
+      }
     });
   }
   async processMusicFromYoutube(

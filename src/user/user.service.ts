@@ -59,10 +59,8 @@ export class UserService {
         user_id: userId,
       },
       orderBy: {
-        Track: {
-          created_at: 'desc',
-        },
-      },
+        updated_at: 'desc',
+      }
     });
     return this.preprocessorSerivce.preprocessUserFavoriteTrack(userFavTrack);
   }
