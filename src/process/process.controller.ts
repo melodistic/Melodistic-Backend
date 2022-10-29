@@ -58,7 +58,7 @@ export class ProcessController {
     FileInterceptor('music', {
       dest: uploadPath,
       fileFilter: musicFileFilter,
-      limits: { fileSize: 1 << 24 },
+      limits: { fileSize: 100 << 20 },
     }),
   )
   @ApiConsumes('multipart/form-data')
