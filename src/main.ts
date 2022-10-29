@@ -14,6 +14,11 @@ async function bootstrap() {
 		origin: ['localhost'],
 	})
   app.use(helmet())
+  app.use(helmet.contentSecurityPolicy({
+    directives: {
+      'script-src': ["'self'","'unsafe-inline'"]
+    }
+  }))
 
   const config = new DocumentBuilder()
     .setTitle('Melodistic API')

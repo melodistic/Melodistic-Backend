@@ -35,8 +35,8 @@ export class WebsiteTemplate {
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>${this.renderEmailTitle(mode)}</title>
       <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     </head>
     <body style="height: 100vh; width: 100vw;font-family: 'Poppins', sans-serif;font-size:14px; text-align: center;">
       <div style="display: flex; flex-direction: column; width: 440px; max-width: 100vw; height: 100vh; margin: auto auto; align-items:center; justify-content: center;">
@@ -46,6 +46,7 @@ export class WebsiteTemplate {
         ${this.renderEmailBody(mode, email, userId)}
       </div>
     </body>
+    ${this.renderScriptTag(mode, userId)}
   </html>`;
 
   renderEmailBody = (
@@ -65,6 +66,24 @@ export class WebsiteTemplate {
     }
   };
 
+  renderScriptTag = (mode: VerifyStatus, userId?: string): string => {
+    switch (mode) {
+      case VerifyStatus.TOKEN_EXPIRED:
+        return `<script>
+        document.getElementById('btn').addEventListener('click', () => {
+          fetch('/api/auth/resent-verify-email?userId=${userId}',{method: 'GET'});
+          const element = document.getElementById('btn');
+          element.style.color = "#FA8B44";
+          element.style.cursor = "default";
+          element.id = '';
+          element.innerHTML = '<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.4998 21.1431C17.5493 21.1431 21.6426 17.0497 21.6426 12.0003C21.6426 6.95082 17.5493 2.85742 12.4998 2.85742C7.45033 2.85742 3.35693 6.95082 3.35693 12.0003C3.35693 17.0497 7.45033 21.1431 12.4998 21.1431Z" stroke="#FA8B44" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.07129 13.1434L11.357 15.4291L17.0713 9.71484" stroke="#FA8B44" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="margin-left:4px">Already resent</span>'
+        });
+      </script>`;
+      default:
+        return '';
+    }
+  }
+
   renderVerifySuccessBody = (email: string): string => `
   <h1 style="font-size: 28px; color:#FA8B44; font-weight:bold; margin: 16px 0;">Welcome to Melodistic</h1>
         <h3 style="font-weight: 600;font-size: 16px; margin-bottom: 16px;">Congratulations, ${email} has been verified!</h3>
@@ -74,7 +93,7 @@ export class WebsiteTemplate {
           song better than ever.
         </div>
         <a href="melodistic://">
-        <div style="background:#101010; border-radius: 4px; padding: 12px 24px;color:#FFFFFF;margin-top:16px; text-decoration:none;" id="btn">
+        <div style="background:#101010; border-radius: 4px; padding: 12px 24px;color:#FFFFFF;margin-top:16px; text-decoration:none; cursor:pointer;">
           Get start with Melodistic
         </div>
         </a>
@@ -85,11 +104,9 @@ export class WebsiteTemplate {
         <div>
         This token has expired. <br> Tap on resend new token for a new one.
         </div>
-        <a href="http://localhost:3000/api/auth/resent-verify-email?userId=${userId}">
-        <div style="background:#101010; border-radius: 4px; padding: 12px 24px;color:#FFFFFF;margin-top:16px; text-decoration:none;" id="btn">
+        <div style="background:#101010;display:flex;align-items:center; border-radius: 4px; padding: 12px 24px;color:#FFFFFF;margin-top:16px; cursor:pointer;" id="btn">
           Resend new token
         </div>
-        </a>
   `;
   renderTokenInvalidBody = (): string => `
   <h1 style="font-size: 28px; color:#FA8B44; font-weight:bold; margin: 16px 0;">Token is invalid :(</h1>
