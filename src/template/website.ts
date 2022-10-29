@@ -25,6 +25,7 @@ export class WebsiteTemplate {
   renderVerificationResultTemplate = (
     mode: VerifyStatus,
     email?: string,
+    userId?: string,
   ): string => `
   <!DOCTYPE html>
   <html lang="en">
@@ -38,21 +39,25 @@ export class WebsiteTemplate {
           <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     </head>
     <body style="height: 100vh; width: 100vw;font-family: 'Poppins', sans-serif;font-size:14px; text-align: center;">
-      <div style="display: flex; flex-direction: column; width: 440px; height: 100vh; margin: auto auto; align-items:center; justify-content: center;">
+      <div style="display: flex; flex-direction: column; width: 440px; max-width: 100vw; height: 100vh; margin: auto auto; align-items:center; justify-content: center;">
         <div>
          ${this.renderImage(mode)} 
         </div>
-        ${this.renderEmailBody(mode, email)}
+        ${this.renderEmailBody(mode, email, userId)}
       </div>
     </body>
   </html>`;
 
-  renderEmailBody = (mode: VerifyStatus, email: string): string => {
+  renderEmailBody = (
+    mode: VerifyStatus,
+    email?: string,
+    userId?: string,
+  ): string => {
     switch (mode) {
       case VerifyStatus.VERIFY_SUCCESS:
         return this.renderVerifySuccessBody(email);
       case VerifyStatus.TOKEN_EXPIRED:
-        return this.renderTokenExpiredBody();
+        return this.renderTokenExpiredBody(userId);
       case VerifyStatus.TOKEN_INVALID:
         return this.renderTokenInvalidBody();
       case VerifyStatus.ALREADY_VERIFIED:
@@ -68,13 +73,23 @@ export class WebsiteTemplate {
           tool that will help you build your exercise track with your favorite
           song better than ever.
         </div>
+        <a href="melodistic://">
+        <div style="background:#101010; border-radius: 4px; padding: 12px 24px;color:#FFFFFF;margin-top:16px; text-decoration:none;" id="btn">
+          Get start with Melodistic
+        </div>
+        </a>
   `;
-  renderTokenExpiredBody = (): string => `
+  renderTokenExpiredBody = (userId: string): string => `
   <h1 style="font-size: 28px; color:#FA8B44; font-weight:bold; margin: 16px 0;">Token Expired :(</h1>
         <h3 style="font-weight: 600;font-size: 16px; margin-bottom: 16px;">Sorry, your token has expired</h3>
         <div>
         This token has expired. <br> Tap on resend new token for a new one.
         </div>
+        <a href="http://localhost:3000/api/auth/resent-verify-email?userId=${userId}">
+        <div style="background:#101010; border-radius: 4px; padding: 12px 24px;color:#FFFFFF;margin-top:16px; text-decoration:none;" id="btn">
+          Resend new token
+        </div>
+        </a>
   `;
   renderTokenInvalidBody = (): string => `
   <h1 style="font-size: 28px; color:#FA8B44; font-weight:bold; margin: 16px 0;">Token is invalid :(</h1>

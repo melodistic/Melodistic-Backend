@@ -237,11 +237,11 @@ export class AuthService {
           email_verification_token: token,
         },
       });
-      if (!existingUser) throw new BadRequestException('Token is invalid');
+      if (!existingUser) throw new BadRequestException('Token is invalid:');
       if (existingUser.email_verified)
-        throw new BadRequestException('Email is already verified');
+        throw new BadRequestException('Email is already verified:');
       if (existingUser.email_verification_token_expiry < new Date())
-        throw new BadRequestException('Token has expired');
+        throw new BadRequestException(`Token has expired:${existingUser.user_id}`);
       const result = await this.prisma.user.update({
         data: {
           email_verified: true,

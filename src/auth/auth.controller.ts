@@ -146,7 +146,7 @@ export class AuthController {
     }
   }
 
-  @Post('resent-verify-email')
+  @Get('resent-verify-email')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Resent verify email' })
@@ -252,7 +252,7 @@ export class AuthController {
       );
     } catch (error) {
       if (error.response) {
-        switch (error.response.message) {
+        switch (error.response.message.split(":")[0]) {
           case 'Token is invalid':
             return this.websiteTemplate.renderVerificationResultTemplate(
               VerifyStatus.TOKEN_INVALID,
@@ -264,6 +264,8 @@ export class AuthController {
           case 'Token has expired':
             return this.websiteTemplate.renderVerificationResultTemplate(
               VerifyStatus.TOKEN_EXPIRED,
+              null,
+              error.response.message.split(":")[1]
             );
           default:
             throw error;
