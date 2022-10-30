@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
@@ -25,13 +25,19 @@ export class ProcessService {
     const video_id = youtubeUrl.includes('v=')
       ? youtubeUrl.split('v=')[1]
       : youtubeUrl.split('be/')[1];
-    await this.httpService.axiosRef.post(
+    try {
+      await this.httpService.axiosRef.post(
       'https://melodistic.me/api/processor/youtube',
       {
         user_id: userId,
         video_id: video_id,
       },
     );
+    } catch (error) {
+      if(error.response.data) {
+        throw new BadRequestException(error.response.data.message);
+      }
+    }
   }
   async processMusicFromFile(
     userId: string,
