@@ -277,17 +277,55 @@ describe('Auth Service', () => {
       );
     });
   });
-  describe('requestRestPassword', () => {
+  describe('resendVerifyEmail', () => {
+    it('should call sendVerifyEmail with user email and random token', async () => {
+      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValueOnce(mockData.user);
+      jest
+        .spyOn(authService, 'generateRandomToken')
+        .mockReturnValueOnce('randomToken');
+      jest
+        .spyOn(prismaService.user, 'update')
+        .mockResolvedValueOnce(mockData.user);
+      jest
+        .spyOn(authService, 'sendVerifyEmail')
+        .mockImplementation(async (to: string, token: string) => {});
+      await authService.resendVerifyEmail(mockData.user.email);
+      expect(authService.sendVerifyEmail).toHaveBeenCalledWith(
+        mockData.user.email,
+        'randomToken',
+      );
+    })
+    it('should throw error if user id is null', () => {
+      expect(authService.resendVerifyEmail(null)).rejects.toThrow(
+        new BadRequestException('User id is required'),
+      );
+    });
+    it('should throw error if user is not found', () => {
+      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValueOnce(null);
+      expect(
+        authService.resendVerifyEmail(mockData.user.user_id),
+      ).rejects.toThrow(new BadRequestException('User not found'));
+    });
+    it('should throw error if user is already verified', () => {
+      jest
+        .spyOn(prismaService.user, 'findFirst')
+        .mockResolvedValueOnce({ ...mockData.user, email_verified: true });
+      expect(
+        authService.resendVerifyEmail(mockData.user.user_id),
+      ).rejects.toThrow(new BadRequestException('Email already verified'));
+    });
+  });
+  describe('requestResetPassword', () => {
     it('should return email and token', async () => {
       jest
         .spyOn(prismaService.user, 'findFirst')
-        .mockResolvedValue(mockData.user);
+        .mockResolvedValueOnce(mockData.user);
       jest
         .spyOn(authService, 'generateResetPasswordToken')
-        .mockReturnValue('mockToken');
+        .mockReturnValueOnce('mockToken');
       jest
         .spyOn(mailService, 'sendEmail')
-        .mockImplementation(
+        .mockImplementationOnce(
           async (to: string, subject: string, html: string) => {},
         );
       const { email, token } = await authService.requestResetPassword(
