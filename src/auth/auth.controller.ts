@@ -32,7 +32,7 @@ import {
 } from './dto/reset-password.dto';
 import { OptionalJwtAuthGuard } from './optional-jwt-auth.guard';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { WebsiteTemplate, VerifyStatus } from 'src/template/website';
+import { WebsiteTemplate, VerifyStatus } from '../template/website';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -145,6 +145,43 @@ export class AuthController {
       throw new InternalServerErrorException('Internal Server Error');
     }
   }
+  
+  @Get('verify')
+  @ApiOperation({ summary: 'Verify user email' })
+  @ApiOkResponse({ description: 'Email is verified' })
+  @ApiBadRequestResponse({ description: 'Token is invalid' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  async verifyEmail(@Query('token') token: string): Promise<any> {
+    try {
+      const result = await this.authService.verifyEmail(token);
+      return this.websiteTemplate.renderVerificationResultTemplate(
+        VerifyStatus.VERIFY_SUCCESS,
+        result.email,
+      );
+    } catch (error) {
+      if (error.response) {
+        switch (error.response.message.split(":")[0]) {
+          case 'Token is invalid':
+            return this.websiteTemplate.renderVerificationResultTemplate(
+              VerifyStatus.TOKEN_INVALID,
+            );
+          case 'Email is already verified':
+            return this.websiteTemplate.renderVerificationResultTemplate(
+              VerifyStatus.ALREADY_VERIFIED,
+            );
+          case 'Token has expired':
+            return this.websiteTemplate.renderVerificationResultTemplate(
+              VerifyStatus.TOKEN_EXPIRED,
+              null,
+              error.response.message.split(":")[1]
+            );
+          default:
+            throw error;
+        }
+      }
+      throw new InternalServerErrorException('Internal Server Error');
+    }
+  }
 
   @Get('resent-verify-email')
   @UseGuards(OptionalJwtAuthGuard)
@@ -171,7 +208,7 @@ export class AuthController {
   }
 
   @Post('forget-password')
-  @ApiOperation({ summary: 'Reset password request' })
+  @ApiOperation({ summary: 'Request reset password' })
   @ApiOkResponse({ description: 'Password reset link sent' })
   @ApiBadRequestResponse({ description: 'Email not found' })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
@@ -192,7 +229,7 @@ export class AuthController {
   }
 
   @Post('reset-password/verify')
-  @ApiOperation({ summary: 'Reset password verify' })
+  @ApiOperation({ summary: 'Verify reset password token' })
   @ApiOkResponse({ description: 'Token is valid' })
   @ApiBadRequestResponse({ description: 'Token is invalid' })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
@@ -238,47 +275,11 @@ export class AuthController {
     }
   }
 
-  @Get('verify')
-  @ApiOperation({ summary: 'Verify user email' })
-  @ApiOkResponse({ description: 'Email is verified' })
-  @ApiBadRequestResponse({ description: 'Token is invalid' })
-  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
-  async verifyEmail(@Query('token') token: string): Promise<any> {
-    try {
-      const result = await this.authService.verifyEmail(token);
-      return this.websiteTemplate.renderVerificationResultTemplate(
-        VerifyStatus.VERIFY_SUCCESS,
-        result.email,
-      );
-    } catch (error) {
-      if (error.response) {
-        switch (error.response.message.split(":")[0]) {
-          case 'Token is invalid':
-            return this.websiteTemplate.renderVerificationResultTemplate(
-              VerifyStatus.TOKEN_INVALID,
-            );
-          case 'Email is already verified':
-            return this.websiteTemplate.renderVerificationResultTemplate(
-              VerifyStatus.ALREADY_VERIFIED,
-            );
-          case 'Token has expired':
-            return this.websiteTemplate.renderVerificationResultTemplate(
-              VerifyStatus.TOKEN_EXPIRED,
-              null,
-              error.response.message.split(":")[1]
-            );
-          default:
-            throw error;
-        }
-      }
-      throw new InternalServerErrorException('Internal Server Error');
-    }
-  }
-
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOkResponse({ description: 'Get Information Success' })
+  @ApiOperation({ summary: 'Get user information' })
+  @ApiOkResponse({ description: 'Get user information Success' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiBadRequestResponse({ description: 'User not found' })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })

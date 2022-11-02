@@ -120,7 +120,7 @@ export class AuthService {
       });
       if (!user) throw new BadRequestException('User not found');
       const isValid = await bcrypt.compare(changePasswordDto.recentPassword, user.password);
-      if (!isValid) throw new BadRequestException('Old password is not correct');
+      if (!isValid) throw new BadRequestException('Recent password is incorrect');
       const newPassword = await this.hashPassword(changePasswordDto.newPassword);
       await this.prisma.user.update({
         data: {
@@ -147,9 +147,9 @@ export class AuthService {
     );
   }
 
-  async resendVerifyEmail(userId: string): Promise<any> {
+  async resendVerifyEmail(userId?: string): Promise<any> {
     try {
-      const token = this.generateRandomToken();
+      if(!userId) throw new BadRequestException('User id is required');
       const user = await this.prisma.user.findFirst({
         where: {
           user_id: userId,
@@ -159,6 +159,7 @@ export class AuthService {
       if(user.email_verified) {
         throw new BadRequestException('Email already verified');
       }
+      const token = this.generateRandomToken();
       await this.prisma.user.update({
         data: {
           email_verification_token: token,

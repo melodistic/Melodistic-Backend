@@ -4,7 +4,6 @@ import {
   Controller,
   Get,
   Post,
-  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
