@@ -111,28 +111,30 @@ export class AuthService {
     }
   }
 
-  async changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<any> {
-    try {
-      const user = await this.prisma.user.findFirst({
-        where: {
-          user_id: userId,
-        }
-      });
-      if (!user) throw new BadRequestException('User not found');
-      const isValid = await bcrypt.compare(changePasswordDto.recentPassword, user.password);
-      if (!isValid) throw new BadRequestException('Recent password is incorrect');
-      const newPassword = await this.hashPassword(changePasswordDto.newPassword);
-      await this.prisma.user.update({
-        data: {
-          password: newPassword,
-        },
-        where: {
-          user_id: userId,
-        },
-      });
-    } catch (error) {
-      throw error;
-    }
+  async changePassword(
+    userId: string,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<any> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        user_id: userId,
+      },
+    });
+    if (!user) throw new BadRequestException('User not found');
+    const isValid = await bcrypt.compare(
+      changePasswordDto.recentPassword,
+      user.password,
+    );
+    if (!isValid) throw new BadRequestException('Recent password is incorrect');
+    const newPassword = await this.hashPassword(changePasswordDto.newPassword);
+    await this.prisma.user.update({
+      data: {
+        password: newPassword,
+      },
+      where: {
+        user_id: userId,
+      },
+    });
   }
 
   async sendVerifyEmail(email: string, token: string): Promise<any> {
@@ -148,31 +150,27 @@ export class AuthService {
   }
 
   async resendVerifyEmail(userId?: string): Promise<any> {
-    try {
-      if(!userId) throw new BadRequestException('User id is required');
-      const user = await this.prisma.user.findFirst({
-        where: {
-          user_id: userId,
-        }
-      });
-      if (!user) throw new BadRequestException('User not found');
-      if(user.email_verified) {
-        throw new BadRequestException('Email already verified');
-      }
-      const token = this.generateRandomToken();
-      await this.prisma.user.update({
-        data: {
-          email_verification_token: token,
-          email_verification_token_expiry: new Date(Date.now() + 3600000),
-        },
-        where: {
-          user_id: userId,
-        },
-      });
-      await this.sendVerifyEmail(user.email, token);
-    } catch (error) {
-      throw error;
+    if (!userId) throw new BadRequestException('User id is required');
+    const user = await this.prisma.user.findFirst({
+      where: {
+        user_id: userId,
+      },
+    });
+    if (!user) throw new BadRequestException('User not found');
+    if (user.email_verified) {
+      throw new BadRequestException('Email already verified');
     }
+    const token = this.generateRandomToken();
+    await this.prisma.user.update({
+      data: {
+        email_verification_token: token,
+        email_verification_token_expiry: new Date(Date.now() + 3600000),
+      },
+      where: {
+        user_id: userId,
+      },
+    });
+    await this.sendVerifyEmail(user.email, token);
   }
 
   async requestResetPassword(email: string): Promise<any> {
@@ -232,30 +230,28 @@ export class AuthService {
   }
 
   async verifyEmail(token: string): Promise<any> {
-    try {
-      const existingUser = await this.prisma.user.findFirst({
-        where: {
-          email_verification_token: token,
-        },
-      });
-      if (!existingUser) throw new BadRequestException('Token is invalid:');
-      if (existingUser.email_verified)
-        throw new BadRequestException('Email is already verified:');
-      if (existingUser.email_verification_token_expiry < new Date())
-        throw new BadRequestException(`Token has expired:${existingUser.user_id}`);
-      const result = await this.prisma.user.update({
-        data: {
-          email_verified: true,
-          email_verification_token: null,
-          email_verification_token_expiry: null,
-        },
-        where: {
-          email_verification_token: token,
-        },
-      });
-      return result;
-    } catch (error) {
-      throw error;
-    }
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        email_verification_token: token,
+      },
+    });
+    if (!existingUser) throw new BadRequestException('Token is invalid:');
+    if (existingUser.email_verified)
+      throw new BadRequestException('Email is already verified:');
+    if (existingUser.email_verification_token_expiry < new Date())
+      throw new BadRequestException(
+        `Token has expired:${existingUser.user_id}`,
+      );
+    const result = await this.prisma.user.update({
+      data: {
+        email_verified: true,
+        email_verification_token: null,
+        email_verification_token_expiry: null,
+      },
+      where: {
+        email_verification_token: token,
+      },
+    });
+    return result;
   }
 }
