@@ -1,5 +1,9 @@
 import { HttpService } from '@nestjs/axios';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
@@ -15,7 +19,7 @@ export class ProcessService {
       },
       orderBy: {
         updated_at: 'desc',
-      }
+      },
     });
   }
   async processMusicFromYoutube(
@@ -27,16 +31,17 @@ export class ProcessService {
       : youtubeUrl.split('be/')[1];
     try {
       await this.httpService.axiosRef.post(
-      'https://melodistic.me/api/processor/youtube',
-      {
-        user_id: userId,
-        video_id: video_id,
-      },
-    );
+        'https://melodistic.me/api/processor/youtube',
+        {
+          user_id: userId,
+          video_id: video_id,
+        },
+      );
     } catch (error) {
-      if(error.response.data) {
+      if (error.response.data) {
         throw new BadRequestException(error.response.data.message);
       }
+      throw error;
     }
   }
   async processMusicFromFile(
@@ -62,10 +67,7 @@ export class ProcessService {
     });
     return existProcess != null;
   }
-  async deleteProcessFile(userId: string, processId: string): Promise<any> {
-    const isProcessExist = await this.checkProcessFile(userId, processId);
-    if (!isProcessExist) throw new NotFoundException('Process not found');
-
+  async deleteProcessFile(processId: string): Promise<any> {
     const musicIdList = (
       await this.prisma.processedMusicExtract.findMany({
         where: {

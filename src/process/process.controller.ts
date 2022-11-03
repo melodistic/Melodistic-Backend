@@ -3,6 +3,9 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  InternalServerErrorException,
+  NotFoundException,
   Param,
   Post,
   UploadedFile,
@@ -11,10 +14,16 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiConsumes,
+  ApiCreatedResponse,
   ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { renameSync } from 'fs';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -34,22 +43,39 @@ export class ProcessController {
   @ApiBearerAuth()
   @ApiInternalServerErrorResponse()
   async getTrack(@User() userId: string): Promise<any> {
-    return this.processService.getProcessInformation(userId);
+    try {
+      const result = await this.processService.getProcessInformation(userId);
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException('Fail to get process information');
+    }
   }
 
   @Post('/youtube')
   @UseGuards(JwtAuthGuard)
+  @HttpCode(201)
   @ApiBearerAuth()
-  @ApiInternalServerErrorResponse()
+  @ApiOperation({ summary: 'Process Music from Youtube URL' })
+  @ApiCreatedResponse({ description: 'Processing started' })
+  @ApiBadRequestResponse({ description: 'Fail to process track' })
+  @ApiUnauthorizedResponse({ description: 'User is not logged in' })
+  @ApiInternalServerErrorResponse({ description: 'Fail to process track' })
   async processMusicFromYoutube(
     @User() userId: string,
     @Body() data: YoutubeDto,
   ): Promise<any> {
-    await this.processService.processMusicFromYoutube(userId, data.url);
-    return {
-      statusCode: 200,
-      message: 'Processing started',
-    };
+    try {
+      await this.processService.processMusicFromYoutube(userId, data.url);
+      return {
+        statusCode: 201,
+        message: 'Processing started',
+      };
+    } catch (error) {
+      if (error.response) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Fail to process track');
+    }
   }
 
   @Post('/file')
@@ -62,33 +88,71 @@ export class ProcessController {
     }),
   )
   @ApiConsumes('multipart/form-data')
+  @HttpCode(201)
   @ApiBearerAuth()
-  @ApiInternalServerErrorResponse()
+  @ApiOperation({ summary: 'Process Music from Youtube URL' })
+  @ApiCreatedResponse({ description: 'Processing started' })
+  @ApiBadRequestResponse({ description: 'Fail to process track' })
+  @ApiUnauthorizedResponse({ description: 'User is not logged in' })
+  @ApiInternalServerErrorResponse({ description: 'Fail to process track' })
   async processMusicFromFile(
     @User() userId: string,
     @Body() body: FileDto,
     @UploadedFile() music: Express.Multer.File,
   ): Promise<any> {
-    const filename = music.originalname.split('.')[0];
-    const fileExtension = music.originalname.split('.')[1];
-    const newFilename = `${filename}-${Date.now()}.${fileExtension}`;
-    const filePath = `${uploadPath}/${newFilename}`;
-    renameSync(music.path, filePath);
-    await this.processService.processMusicFromFile(userId, filename, filePath);
-    return {
-      statusCode: 200,
-      message: 'Processing started',
-    };
+    try {
+      const filename = music.originalname.split('.')[0];
+      const fileExtension = music.originalname.split('.')[1];
+      const newFilename = `${filename}-${Date.now()}.${fileExtension}`;
+      const filePath = `${uploadPath}/${newFilename}`;
+      renameSync(music.path, filePath);
+      await this.processService.processMusicFromFile(
+        userId,
+        filename,
+        filePath,
+      );
+      return {
+        statusCode: 201,
+        message: 'Processing started',
+      };
+    } catch (error) {
+      if (error.response) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Fail to process track');
+    }
   }
 
   @Delete('/:processId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiInternalServerErrorResponse()
+  @ApiOperation({ summary: 'Process Music from Youtube URL' })
+  @ApiOkResponse({ description: 'Successfully delete process information' })
+  @ApiNotFoundResponse({ description: 'Process information not found' })
+  @ApiUnauthorizedResponse({ description: 'User is not logged in' })
+  @ApiInternalServerErrorResponse({
+    description: 'Fail to delete process information',
+  })
   async deleteProcessFile(
     @User() userId: string,
     @Param('processId') processId: string,
   ): Promise<any> {
-    return this.processService.deleteProcessFile(userId, processId);
+    try {
+      const isProcessExist = await this.processService.checkProcessFile(
+        userId,
+        processId,
+      );
+      if (!isProcessExist)
+        throw new NotFoundException('Process information not found');
+      const result = this.processService.deleteProcessFile(processId);
+      return result;
+    } catch (error) {
+      if (error.response) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Fail to delete process information',
+      );
+    }
   }
 }
