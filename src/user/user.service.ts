@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PreprocessorService } from '../utils/preprocessor.service';
 import { PrismaService } from '../prisma.service';
 import { UserDurationDto } from './dto/duration.dto';
@@ -62,7 +62,8 @@ export class UserService {
         updated_at: 'desc',
       }
     });
-    return this.preprocessorSerivce.preprocessUserFavoriteTrack(userFavTrack);
+    const favoriteTracks = await this.preprocessorSerivce.preprocessUserFavoriteTrack(userFavTrack);
+    return favoriteTracks;
   }
 
   async toggleFavorite(userId: string, trackId: string): Promise<any> {
@@ -106,10 +107,6 @@ export class UserService {
         exercise_duration_minute: duration.duration_minute,
       },
     });
-    return {
-      status: 200,
-      message: 'Exercise duration updated',
-    };
   }
 
   async uploadImage(userId: string, image: string): Promise<any> {
@@ -121,9 +118,5 @@ export class UserService {
         user_profile_image: image,
       },
     });
-    return {
-      status: 200,
-      message: 'Profile image updated',
-    };
   }
 }

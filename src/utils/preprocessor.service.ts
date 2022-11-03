@@ -19,30 +19,6 @@ export class PreprocessorService {
       },
     );
   }
-  preprocessLibraryTrack(libraryTrack: any): any {
-    return libraryTrack.map(
-      (
-        track: {
-          Track: {
-            track_id: string;
-            track_name: string;
-            track_image_url: string;
-            track_path: string;
-            description: string;
-            duration: number;
-          };
-          UserFavorite: UserFavorite[];
-        }[],
-      ) => {
-        const isFav = track['UserFavorite'] != null;
-        delete track['UserFavorite'];
-        return {
-          ...track['Track'],
-          is_favorite: isFav,
-        };
-      },
-    );
-  }
   preprocessUserFavoriteTrack(userFavTrack: any): any {
     return userFavTrack.map(
       (

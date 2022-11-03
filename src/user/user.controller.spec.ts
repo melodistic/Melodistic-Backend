@@ -1,6 +1,5 @@
 import { Test } from '@nestjs/testing';
 import {
-  BadRequestException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,6 +7,7 @@ import * as fs from 'fs';
 import { Readable } from 'stream';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
+import { TrackService } from '../track/track.service';
 const mockData = {
   user: {
     user_id: '1',
@@ -95,18 +95,26 @@ const mockData = {
     stream: new Readable(),
     buffer: Buffer.from('test'),
   },
+  trackId: '1',
+  durationDto: {
+    duration_hour: 1,
+    duration_minute: 1,
+  },
 };
+jest.mock('../track/track.service');
 jest.mock('./user.service');
 describe('User Controller', () => {
   let userController: UserController;
   let userService: UserService;
+  let trackService: TrackService;
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [UserController],
-      providers: [UserService],
+      providers: [UserService, TrackService],
     }).compile();
     userService = moduleRef.get(UserService);
     userController = moduleRef.get(UserController);
+    trackService = moduleRef.get(TrackService);
   });
   beforeEach(() => {
     jest.spyOn(fs, 'unlinkSync');
@@ -116,72 +124,156 @@ describe('User Controller', () => {
   afterEach(() => {
     jest.resetAllMocks();
   });
-  it("GET /user/library should return user's library", async () => {
-    jest
-      .spyOn(userService, 'getUserLibrary')
-      .mockResolvedValue(mockData.generatedTrack);
-    const result = await userController.getLibrary('1');
-    expect(result).toEqual(mockData.generatedTrack);
-    expect(userService.getUserLibrary).toHaveBeenCalled();
-  });
-  it("GET /user/favorite should return user's favorite tracks", async () => {
-    jest
-      .spyOn(userService, 'getUserFavorite')
-      .mockResolvedValue(mockData.favoriteTrack);
-    const result = await userController.getFavorite('1');
-    expect(result).toEqual(mockData.favoriteTrack);
-    expect(userService.getUserFavorite).toHaveBeenCalled();
-  });
-  it("POST /user/favorite should add a track to user's favorite", async () => {
-    jest.spyOn(userService, 'toggleFavorite').mockResolvedValue({
-      status: 201,
-      message: 'Track added to favorite',
+  describe('Get User Library (GET /user/library)', () => {
+    it('should return tracks in user library', async () => {
+      jest
+        .spyOn(userService, 'getUserLibrary')
+        .mockResolvedValue(mockData.generatedTrack);
+      const result = await userController.getLibrary(mockData.user.user_id);
+      expect(result).toEqual(mockData.generatedTrack);
+      expect(userService.getUserLibrary).toHaveBeenCalled();
     });
-    const result = await userController.toggleFavorite('1', {
-      track_id: '1',
+    it('should throw error if something went wrong', async () => {
+      jest.spyOn(userService, 'getUserLibrary').mockRejectedValueOnce('error');
+      await expect(
+        userController.getLibrary(mockData.user.user_id),
+      ).rejects.toThrow(
+        new InternalServerErrorException('Internal Server Error'),
+      );
     });
-    expect(result).toBeDefined();
-    expect(result.status).toEqual(201);
-    expect(result.message).toEqual('Track added to favorite');
-    expect(userService.toggleFavorite).toHaveBeenCalled();
   });
-  it("POST /user/favorite should remove track from user's favorite", async () => {
-    jest.spyOn(userService, 'toggleFavorite').mockResolvedValue({
-      status: 200,
-      message: 'Track removed from favorite',
+  describe('Get User Favorite (GET /user/favorite)', () => {
+    it("GET /user/favorite should return user's favorite tracks", async () => {
+      jest
+        .spyOn(userService, 'getUserFavorite')
+        .mockResolvedValue(mockData.favoriteTrack);
+      const result = await userController.getFavorite(mockData.user.user_id);
+      expect(result).toEqual(mockData.favoriteTrack);
+      expect(userService.getUserFavorite).toHaveBeenCalled();
     });
-    const result = await userController.toggleFavorite('1', {
-      track_id: '1',
+    it('should throw error if something went wrong', async () => {
+      jest.spyOn(userService, 'getUserFavorite').mockRejectedValueOnce('error');
+      await expect(
+        userController.getFavorite(mockData.user.user_id),
+      ).rejects.toThrow(
+        new InternalServerErrorException('Internal Server Error'),
+      );
     });
-    expect(result).toBeDefined();
-    expect(result.status).toEqual(200);
-    expect(result.message).toEqual('Track removed from favorite');
-    expect(userService.toggleFavorite).toHaveBeenCalled();
   });
-  it('POST /user/image should update user profile image', async () => {
-    jest.spyOn(userService, 'uploadImage').mockResolvedValue({
-      status: 200,
-      message: 'Profile image updated',
+  describe('Toggle Favorite (POST /user/favorite)', () => {
+    it("should add a track to user's favorite if track is not favorite by user", async () => {
+      jest.spyOn(trackService, 'getTrackById').mockResolvedValueOnce(mockData.favoriteTrack[0]);
+      jest.spyOn(userService, 'toggleFavorite').mockResolvedValue({
+        status: 201,
+        message: 'Track added to favorite',
+      });
+      const result = await userController.toggleFavorite(
+        mockData.user.user_id,
+        {
+          track_id: mockData.trackId,
+        },
+      );
+      expect(result).toBeDefined();
+      expect(result.status).toEqual(201);
+      expect(result.message).toEqual('Track added to favorite');
+      expect(userService.toggleFavorite).toHaveBeenCalled();
     });
-    const result = await userController.uploadProfileImage(
-      '1',
-      {
-        image: 'test',
-      },
-      mockData.file,
-    );
-    expect(result).toBeDefined();
-    expect(result.status).toEqual(200);
-    expect(result.message).toEqual('Profile image updated');
-    expect(userService.uploadImage).toHaveBeenCalled();
+    it("should remove track from user's favorite if user already favorite track", async () => {
+      jest.spyOn(trackService, 'getTrackById').mockResolvedValueOnce(mockData.favoriteTrack[0]);
+      jest.spyOn(userService, 'toggleFavorite').mockResolvedValue({
+        status: 200,
+        message: 'Track removed from favorite',
+      });
+      const result = await userController.toggleFavorite(
+        mockData.user.user_id,
+        {
+          track_id: mockData.trackId,
+        },
+      );
+      expect(result).toBeDefined();
+      expect(result.status).toEqual(200);
+      expect(result.message).toEqual('Track removed from favorite');
+      expect(userService.toggleFavorite).toHaveBeenCalled();
+    });
+    it('should throw error if track is not found', async () => {
+      jest.spyOn(trackService, 'getTrackById').mockResolvedValueOnce(null);
+      await expect(
+        userController.toggleFavorite(mockData.user.user_id, {
+          track_id: mockData.trackId,
+        }),
+      ).rejects.toThrow(new NotFoundException('Track not found'));
+    });
+    it('should throw error if something went wrong', async () => {
+      jest.spyOn(trackService, 'getTrackById').mockResolvedValueOnce(mockData.favoriteTrack[0]);
+      jest.spyOn(userService, 'toggleFavorite').mockRejectedValueOnce('error');
+      await expect(
+        userController.toggleFavorite(mockData.user.user_id, {
+          track_id: mockData.trackId,
+        }),
+      ).rejects.toThrow(
+        new InternalServerErrorException('Internal Server Error'),
+      );
+    });
   });
-  it('POST /user/image should throw error when something went wrong', async () => {
-    jest
-      .spyOn(userService, 'uploadImage')
-      .mockRejectedValue(new BadRequestException('Invalid Image'));
-    await expect(
-      userController.uploadProfileImage('1', { image: 'test' }, mockData.file),
-    ).rejects.toThrow(new BadRequestException('Invalid image'));
-    expect(userService.uploadImage).toHaveBeenCalled();
+  describe('Set Exercise Duration (POST /user/duration)', () => {
+    it('should update user exercise duration', async () => {
+      jest.spyOn(userService, 'updateExerciseDuration').mockResolvedValue({
+        status: 200,
+        message: 'Exercise duration updated',
+      });
+      const result = await userController.updateExerciseDuration(
+        mockData.user.user_id,
+        mockData.durationDto,
+      );
+      expect(result).toBeDefined();
+      expect(result.status).toEqual(200);
+      expect(result.message).toEqual('Exercise duration updated');
+      expect(userService.updateExerciseDuration).toHaveBeenCalled();
+    });
+    it('should throw error if something went wrong', async () => {
+      jest
+        .spyOn(userService, 'updateExerciseDuration')
+        .mockRejectedValueOnce('error');
+      await expect(
+        userController.updateExerciseDuration(
+          mockData.user.user_id,
+          mockData.durationDto,
+        ),
+      ).rejects.toThrow(
+        new InternalServerErrorException('Internal Server Error'),
+      );
+    });
+  });
+  describe('Update User Profile Image (POST /user/image)', () => {
+    it('POST /user/image should update user profile image', async () => {
+      jest.spyOn(userService, 'uploadImage').mockResolvedValue({
+        status: 200,
+        message: 'Profile image updated',
+      });
+      const result = await userController.uploadProfileImage(
+        mockData.user.user_id,
+        {
+          image: 'test',
+        },
+        mockData.file,
+      );
+      expect(result).toBeDefined();
+      expect(result.status).toEqual(200);
+      expect(result.message).toEqual('Profile image updated');
+      expect(userService.uploadImage).toHaveBeenCalled();
+    });
+    it('POST /user/image should throw error when something went wrong', async () => {
+      jest.spyOn(userService, 'uploadImage').mockRejectedValue('error');
+      await expect(
+        userController.uploadProfileImage(
+          mockData.user.user_id,
+          { image: 'test' },
+          mockData.file,
+        ),
+      ).rejects.toThrow(
+        new InternalServerErrorException('Internal Server Error'),
+      );
+      expect(userService.uploadImage).toHaveBeenCalled();
+    });
   });
 });

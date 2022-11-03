@@ -1,6 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { PreprocessorService } from 'src/utils/preprocessor.service';
+import { PreprocessorService } from '../utils/preprocessor.service';
 import { PrismaService } from '../prisma.service';
 import { CreateTrackDto } from './dto/create-tack.dto';
 @Injectable()
