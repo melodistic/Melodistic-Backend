@@ -19,6 +19,8 @@ import {
   ApiConsumes,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
   ApiParam,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -30,7 +32,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { uploadPath, fileFilter } from '../config/file.config';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { unlinkSync, renameSync, existsSync, mkdirSync } from 'fs';
-import { OptionalJwtAuthGuard } from 'src/auth/optional-jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 
 @ApiTags('Track')
 @Controller('track')
@@ -40,37 +42,53 @@ export class TrackController {
   @Get('')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
-  @ApiInternalServerErrorResponse()
+  @ApiOperation({ summary: 'Get Public Track' })
+  @ApiOkResponse({ description: 'Successfully get public track' })
+  @ApiUnauthorizedResponse({ description: 'User is not logged in' })
+  @ApiInternalServerErrorResponse({ description: 'Fail to get Track' })
   async getTrack(@User() userId: string): Promise<any> {
-    if (userId != null) {
-      return this.trackService.getTrackWithFavorite(userId);
+    try {
+      if (userId != null) {
+        return this.trackService.getTrackWithFavorite(userId);
+      }
+      return this.trackService.getTrack();
+    } catch (error) {
+      throw new InternalServerErrorException('Fail to get Track');
     }
-    return this.trackService.getTrack();
   }
 
   @Get(':trackId')
   @UseGuards(JwtAuthGuard)
   @ApiParam({ name: 'trackId' })
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get Public Track' })
+  @ApiOkResponse({ description: 'Successfully get track by id' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
-  @ApiNotFoundResponse()
-  @ApiBadRequestResponse()
-  @ApiInternalServerErrorResponse()
+  @ApiNotFoundResponse({ description: 'Track not found' })
+  @ApiInternalServerErrorResponse({ description: 'Fail to get Track' })
   async getTrackById(
     @User() userId: string,
     @Param('trackId') trackId: string,
   ): Promise<any> {
-    const track = await this.trackService.getTrackById(userId, trackId);
-    if (track) return track;
-    throw new NotFoundException('Track not found');
+    try {
+      const track = await this.trackService.getTrackById(userId, trackId);
+      if (!track) throw new NotFoundException('Track not found');
+      return track;
+    } catch (error) {
+      if (error.response) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Fail to get Track');
+    }
   }
 
   @Post('')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create Track' })
+  @ApiOkResponse({ description: 'Successfully create track' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
-  @ApiBadRequestResponse()
-  @ApiInternalServerErrorResponse()
+  @ApiInternalServerErrorResponse({ description: 'Fail to create Track' })
   async createTrack(
     @User() userId: string,
     @Body() track: CreateTrackDto,
@@ -79,7 +97,10 @@ export class TrackController {
       const createdTrack = await this.trackService.createTrack(userId, track);
       return createdTrack;
     } catch (error) {
-      throw new BadRequestException('Fail to create Track');
+      if (error.response) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Fail to create Track');
     }
   }
 
@@ -94,8 +115,11 @@ export class TrackController {
   )
   @ApiConsumes('multipart/form-data')
   @ApiBearerAuth()
-  @ApiNotFoundResponse()
-  @ApiInternalServerErrorResponse()
+  @ApiOperation({ summary: 'Create Track' })
+  @ApiOkResponse({ description: 'Successfully update track image' })
+  @ApiUnauthorizedResponse({ description: 'User is not logged in' })
+  @ApiNotFoundResponse({ description: 'Track not found' })
+  @ApiInternalServerErrorResponse({ description: 'Fail to delete Track' })
   async updateTrackImage(
     @User() userId,
     @Body() body: UpdateImageDto,
@@ -124,6 +148,9 @@ export class TrackController {
       renameSync(programImage.path, filepath);
       return updatedTrack;
     } catch (error) {
+      if (error.response) {
+        throw error;
+      }
       throw new InternalServerErrorException('Fail to update Track');
     }
   }
@@ -132,10 +159,11 @@ export class TrackController {
   @UseGuards(JwtAuthGuard)
   @ApiParam({ name: 'trackId' })
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create Track' })
+  @ApiOkResponse({ description: 'Track deleted' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
-  @ApiNotFoundResponse()
-  @ApiBadRequestResponse()
-  @ApiInternalServerErrorResponse()
+  @ApiNotFoundResponse({ description: 'Track not found' })
+  @ApiInternalServerErrorResponse({ description: 'Fail to delete Track' })
   async deleteTrack(
     @User() userId: string,
     @Param('trackId') trackId: string,
@@ -150,7 +178,10 @@ export class TrackController {
       await this.trackService.deleteTrack(trackId);
       return { status: 200, message: 'Track deleted' };
     } catch (error) {
-      throw new BadRequestException('Fail to delete Track');
+      if (error.response) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Fail to delete Track');
     }
   }
 }

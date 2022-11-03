@@ -61,7 +61,7 @@ export class UserController {
   @Get('favorite')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get User Favorite' })
-  @ApiOkResponse({ description: 'Successfully getting user favorite tracks' })
+  @ApiOkResponse({ description: 'Successfully get user favorite tracks' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   async getFavorite(@User() userId: string): Promise<any> {
@@ -87,11 +87,8 @@ export class UserController {
     @Body() favorite: UserFavoriteDto,
   ): Promise<any> {
     try {
-      const track = await this.trackService.getTrackById(
-        userId,
-        favorite.track_id,
-      );
-      if (!track) {
+      const existsTrack = await this.trackService.checkUserTrack(userId, favorite.track_id);
+      if (!existsTrack) {
         throw new NotFoundException('Track not found');
       }
       const result = await this.userService.toggleFavorite(
