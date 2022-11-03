@@ -73,7 +73,7 @@ describe('Process Controller', () => {
   afterEach(() => {
     jest.resetAllMocks();
   });
-  describe('Get Process Information', () => {
+  describe('Get Process Information (GET /process)', () => {
     it('should return processed music information', async () => {
       jest
         .spyOn(processService, 'getProcessInformation')
@@ -95,7 +95,7 @@ describe('Process Controller', () => {
       );
     });
   });
-  describe('Process Music from Youtube URL', () => {
+  describe('Process Music from Youtube URL (POST /process/youtube)', () => {
     it('should start process', async () => {
       jest
         .spyOn(processService, 'processMusicFromYoutube')
@@ -124,7 +124,7 @@ describe('Process Controller', () => {
       expect(processService.processMusicFromYoutube).toHaveBeenCalled();
     });
   });
-  describe('Process Music from File', () => {
+  describe('Process Music from File (POST /process/file)', () => {
     it('should start process', async () => {
       jest
         .spyOn(processService, 'processMusicFromFile')
@@ -155,7 +155,7 @@ describe('Process Controller', () => {
       expect(processService.processMusicFromFile).toHaveBeenCalled();
     });
   });
-  describe('Delete Processed Music', () => {
+  describe('Delete Processed Music (DELETE /process/:processId)', () => {
     it('should delete processed music', async () => {
       jest
         .spyOn(processService, 'checkProcessFile')
