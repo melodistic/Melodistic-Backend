@@ -1,10 +1,6 @@
 import { HttpService } from '@nestjs/axios';
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class ProcessService {
@@ -49,14 +45,21 @@ export class ProcessService {
     file_name: string,
     file_path: string,
   ): Promise<any> {
-    await this.httpService.axiosRef.post(
-      'https://melodistic.me/api/processor/file',
-      {
-        user_id: userId,
-        file_name: file_name,
-        file_path: file_path,
-      },
-    );
+    try {
+      await this.httpService.axiosRef.post(
+        'https://melodistic.me/api/processor/file',
+        {
+          user_id: userId,
+          file_name: file_name,
+          file_path: file_path,
+        },
+      );
+    } catch (error) {
+      if (error.response.data) {
+        throw new BadRequestException(error.response.data.message);
+      }
+      throw error;
+    }
   }
   async checkProcessFile(userId: string, processId: string): Promise<boolean> {
     const existProcess = await this.prisma.processedMusic.findFirst({

@@ -162,7 +162,7 @@ describe('User Controller', () => {
   });
   describe('Toggle Favorite (POST /user/favorite)', () => {
     it("should add a track to user's favorite if track is not favorite by user", async () => {
-      jest.spyOn(trackService, 'getTrackById').mockResolvedValueOnce(mockData.favoriteTrack[0]);
+      jest.spyOn(trackService, 'checkUserTrack').mockResolvedValueOnce(mockData.favoriteTrack[0]);
       jest.spyOn(userService, 'toggleFavorite').mockResolvedValue({
         status: 201,
         message: 'Track added to favorite',
@@ -179,7 +179,7 @@ describe('User Controller', () => {
       expect(userService.toggleFavorite).toHaveBeenCalled();
     });
     it("should remove track from user's favorite if user already favorite track", async () => {
-      jest.spyOn(trackService, 'getTrackById').mockResolvedValueOnce(mockData.favoriteTrack[0]);
+      jest.spyOn(trackService, 'checkUserTrack').mockResolvedValueOnce(mockData.favoriteTrack[0]);
       jest.spyOn(userService, 'toggleFavorite').mockResolvedValue({
         status: 200,
         message: 'Track removed from favorite',
@@ -196,7 +196,7 @@ describe('User Controller', () => {
       expect(userService.toggleFavorite).toHaveBeenCalled();
     });
     it('should throw error if track is not found', async () => {
-      jest.spyOn(trackService, 'getTrackById').mockResolvedValueOnce(null);
+      jest.spyOn(trackService, 'checkUserTrack').mockResolvedValueOnce(null);
       await expect(
         userController.toggleFavorite(mockData.user.user_id, {
           track_id: mockData.trackId,
@@ -204,7 +204,7 @@ describe('User Controller', () => {
       ).rejects.toThrow(new NotFoundException('Track not found'));
     });
     it('should throw error if something went wrong', async () => {
-      jest.spyOn(trackService, 'getTrackById').mockResolvedValueOnce(mockData.favoriteTrack[0]);
+      jest.spyOn(trackService, 'checkUserTrack').mockResolvedValueOnce(mockData.favoriteTrack[0]);
       jest.spyOn(userService, 'toggleFavorite').mockRejectedValueOnce('error');
       await expect(
         userController.toggleFavorite(mockData.user.user_id, {

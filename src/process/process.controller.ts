@@ -26,9 +26,9 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { renameSync } from 'fs';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { uploadPath, musicFileFilter } from 'src/config/file.config';
-import { User } from 'src/decorators/user.decorator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { uploadPath, musicFileFilter } from '../config/file.config';
+import { User } from '../decorators/user.decorator';
 import { FileDto } from './dto/file.dto';
 import { YoutubeDto } from './dto/youtube.dto';
 import { ProcessService } from './process.service';
@@ -41,8 +41,11 @@ export class ProcessController {
   @Get('')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiInternalServerErrorResponse()
-  async getTrack(@User() userId: string): Promise<any> {
+  @ApiOperation({ summary: 'Process Music from Youtube URL' })
+  @ApiOkResponse({ description: 'Successfully get process information' })
+  @ApiUnauthorizedResponse({ description: 'User is not logged in' })
+  @ApiInternalServerErrorResponse({ description: 'Fail to get process information' })
+  async getProcessInformation(@User() userId: string): Promise<any> {
     try {
       const result = await this.processService.getProcessInformation(userId);
       return result;
@@ -144,7 +147,7 @@ export class ProcessController {
       );
       if (!isProcessExist)
         throw new NotFoundException('Process information not found');
-      const result = this.processService.deleteProcessFile(processId);
+      const result = await this.processService.deleteProcessFile(processId);
       return result;
     } catch (error) {
       if (error.response) {
