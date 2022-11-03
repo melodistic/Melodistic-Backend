@@ -3,7 +3,7 @@ import { PreprocessorService } from '../utils/preprocessor.service';
 import { PrismaService } from '../prisma.service';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
-import { TrackModule } from 'src/track/track.module';
+import { TrackModule } from '../track/track.module';
 
 @Module({
   imports: [TrackModule],
