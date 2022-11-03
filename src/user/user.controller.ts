@@ -14,7 +14,11 @@ import { UserService } from './user.service';
 import {
   ApiBearerAuth,
   ApiConsumes,
+  ApiCreatedResponse,
   ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
   ApiUnsupportedMediaTypeResponse,
@@ -40,8 +44,10 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('library')
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get User Library' })
+  @ApiOkResponse({ description: 'Successfully getting user library tracks' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
-  @ApiInternalServerErrorResponse()
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   async getLibrary(@User() userId: string): Promise<any> {
     try {
       const libraryTracks = await this.userService.getUserLibrary(userId);
@@ -54,8 +60,10 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('favorite')
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get User Favorite' })
+  @ApiOkResponse({ description: 'Successfully getting user favorite tracks' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
-  @ApiInternalServerErrorResponse()
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   async getFavorite(@User() userId: string): Promise<any> {
     try {
       const favoriteTracks = await this.userService.getUserFavorite(userId);
@@ -68,8 +76,12 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Post('favorite')
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle Favorite' })
+  @ApiOkResponse({ description: 'Track removed from favorite' })
+  @ApiCreatedResponse({ description: 'Track added to favorite' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
-  @ApiInternalServerErrorResponse()
+  @ApiNotFoundResponse({ description: 'Track not found' })
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   async toggleFavorite(
     @User() userId: string,
     @Body() favorite: UserFavoriteDto,
@@ -98,8 +110,10 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Post('duration')
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Set Exercise Duration' })
+  @ApiOkResponse({ description: 'Exercise duration updated' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
-  @ApiInternalServerErrorResponse()
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   async updateExerciseDuration(
     @User() userId: string,
     @Body() body: UserDurationDto,
@@ -129,9 +143,11 @@ export class UserController {
   @Post('image')
   @ApiConsumes('multipart/form-data')
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update Profile Image' })
+  @ApiOkResponse({ description: 'Profile image is updated' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
-  @ApiInternalServerErrorResponse()
-  @ApiUnsupportedMediaTypeResponse()
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
+  @ApiUnsupportedMediaTypeResponse({ description: 'Unsupported Media Type' })
   async uploadProfileImage(
     @User() userId: string,
     @Body() body: UploadImageDto,
