@@ -1,4 +1,4 @@
-FROM node:latest as builder
+FROM node:16 as builder
 
 WORKDIR /app
 
@@ -22,6 +22,7 @@ FROM node:16 as runner
 WORKDIR /app
 
 COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
 COPY --from=builder /app/dist /app/dist
 
 EXPOSE 3000
