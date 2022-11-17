@@ -31,7 +31,7 @@ import { CreateTrackDto } from './dto/create-tack.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { uploadPath, fileFilter } from '../config/file.config';
 import { UpdateImageDto } from './dto/update-image.dto';
-import { unlinkSync, renameSync, existsSync, mkdirSync } from 'fs';
+import { unlinkSync, renameSync, existsSync, mkdirSync, rmSync } from 'fs';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 
 @ApiTags('Track')
@@ -176,6 +176,10 @@ export class TrackController {
       await this.trackService.deleteGeneratedTrack(userId, trackId);
       await this.trackService.deleteFavoriteTrack(userId, trackId);
       await this.trackService.deleteTrack(trackId);
+      rmSync('/app/combine-result' + trackId + '.wav', {
+        recursive: true,
+        force: true,
+      });
       return { status: 200, message: 'Track deleted' };
     } catch (error) {
       if (error.response) {

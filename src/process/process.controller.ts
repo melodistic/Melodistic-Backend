@@ -25,7 +25,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { renameSync } from 'fs';
+import { renameSync, rmSync } from 'fs';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { uploadPath, musicFileFilter } from '../config/file.config';
 import { User } from '../decorators/user.decorator';
@@ -44,7 +44,9 @@ export class ProcessController {
   @ApiOperation({ summary: 'Get Process Information' })
   @ApiOkResponse({ description: 'Successfully get process information' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
-  @ApiInternalServerErrorResponse({ description: 'Fail to get process information' })
+  @ApiInternalServerErrorResponse({
+    description: 'Fail to get process information',
+  })
   async getProcessInformation(@User() userId: string): Promise<any> {
     try {
       const result = await this.processService.getProcessInformation(userId);
@@ -148,6 +150,16 @@ export class ProcessController {
       if (!isProcessExist)
         throw new NotFoundException('Process information not found');
       const result = await this.processService.deleteProcessFile(processId);
+      if (result != null) {
+        rmSync('/app/song/processed/' + result.processed_id, {
+          recursive: true,
+          force: true,
+        });
+        rmSync('/app/features/processed/' + result.processed_id, {
+          recursive: true,
+          force: true,
+        });
+      }
       return result;
     } catch (error) {
       if (error.response) {
