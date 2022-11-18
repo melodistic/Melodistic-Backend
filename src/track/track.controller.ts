@@ -115,7 +115,7 @@ export class TrackController {
   )
   @ApiConsumes('multipart/form-data')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create Track' })
+  @ApiOperation({ summary: 'Delete Track' })
   @ApiOkResponse({ description: 'Successfully update track image' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiNotFoundResponse({ description: 'Track not found' })
@@ -176,7 +176,7 @@ export class TrackController {
       await this.trackService.deleteGeneratedTrack(userId, trackId);
       await this.trackService.deleteFavoriteTrack(userId, trackId);
       await this.trackService.deleteTrack(trackId);
-      rmSync('/app/combine-result' + trackId + '.wav', {
+      rmSync('/app/combine-result/' + trackId + '.wav', {
         recursive: true,
         force: true,
       });
