@@ -87,7 +87,7 @@ export class UserController {
     @Body() favorite: UserFavoriteDto,
   ): Promise<any> {
     try {
-      const existsTrack = await this.trackService.checkUserTrack(userId, favorite.track_id);
+      const existsTrack = await this.trackService.checkExistTrack(favorite.track_id);
       if (!existsTrack) {
         throw new NotFoundException('Track not found');
       }

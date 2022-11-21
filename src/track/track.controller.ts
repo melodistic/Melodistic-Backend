@@ -115,11 +115,11 @@ export class TrackController {
   )
   @ApiConsumes('multipart/form-data')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete Track' })
+  @ApiOperation({ summary: 'Update Track image' })
   @ApiOkResponse({ description: 'Successfully update track image' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiNotFoundResponse({ description: 'Track not found' })
-  @ApiInternalServerErrorResponse({ description: 'Fail to delete Track' })
+  @ApiInternalServerErrorResponse({ description: 'Fail to update track image' })
   async updateTrackImage(
     @User() userId,
     @Body() body: UpdateImageDto,
@@ -159,7 +159,7 @@ export class TrackController {
   @UseGuards(JwtAuthGuard)
   @ApiParam({ name: 'trackId' })
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create Track' })
+  @ApiOperation({ summary: 'Delete Track' })
   @ApiOkResponse({ description: 'Track deleted' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiNotFoundResponse({ description: 'Track not found' })
