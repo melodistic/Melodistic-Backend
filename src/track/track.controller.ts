@@ -61,7 +61,7 @@ export class TrackController {
   @UseGuards(JwtAuthGuard)
   @ApiParam({ name: 'trackId' })
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get Public Track' })
+  @ApiOperation({ summary: 'Get Track information by id' })
   @ApiOkResponse({ description: 'Successfully get track by id' })
   @ApiUnauthorizedResponse({ description: 'User is not logged in' })
   @ApiNotFoundResponse({ description: 'Track not found' })
